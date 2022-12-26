@@ -38,5 +38,6 @@ r = lc.tr ('@¹', '@1')\
       .tr ('⟨function ', '(od-function ')\
       .tr ('⟨bifunction ', '(od-bifunction ')\
       .tr ('//', ';;')\
+      .tr ('𝜏', '%%')\
       .tr ('⟩', ')')
 r.pr ()

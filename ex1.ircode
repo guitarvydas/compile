@@ -9,7 +9,7 @@ $g.pushScope ()
     
      $g.pushScope (identity) 
 //char identity (char c) {
-     $g.defsynonym c ⟨char @¹ param 1⟩⟩ 
+     $g.defsynonym c ⟨char @¹ param 1⟩
      $s.ensureInScope c 
      $ir.beginFunction identity 
 //  return c;
@@ -23,14 +23,14 @@ $g.pushScope ()
                                ⟨*od ⟨int @¹ _ _⟩⟨char @² _ _⟩⟩ // params - argc, argv
                                ⟨*od ⟨void _ _ _⟩⟩⟩ // return type - none (void) 
     $g.pushScope (main) 
-      $g.defsynonym “argc” ⟨int @¹ param 1⟩⟩ 
-      $g.defsynonym “argv” ⟨char @² param 2⟩⟩ 
+      $g.defsynonym “argc” ⟨int @¹ param 1⟩
+      $g.defsynonym “argv” ⟨char @² param 2⟩
       $ir.beginFunction “main” 2 
 //  char x = identity ('x');
       $s.ensureInScope x 
       $s.ensureInScope identity 
       $s.ensureType identity ⟨function _ ⟨*od ⟨char @¹ _ _⟩⟩ ⟨*od ⟨char @¹ _ _⟩⟩⟩ 
-      $g.defsynonym x ⟨char @¹ temp 1⟩⟩ 
+      $g.defsynonym x ⟨char @¹ temp 1⟩ 
       $ir.resetArgs 
       $ir.mutate x ⟨char @⁰ temp “x”⟩  
       $ir.pushArg x
@@ -41,8 +41,8 @@ $g.pushScope ()
 //  printf ("result = %c\n", x);
       $s.ensureInScope x 
       $s.ensureInScope printf 
-      $g.defsynonym printf ⟨bifunction _ ⟨*od ⟨char @¹ _ _⟩ ⟨varargs _ _ _⟩⟩ ⟨*od ⟨void _ _ _⟩⟩⟩ 
-      $s.ensureType printf ⟨bifunction _ ⟨*od ⟨char @¹ _ _⟩ ⟨varargs _ _ _⟩⟩ ⟨*od ⟨void _ _ _⟩⟩⟩ 
+      $g.defsynonym printf ⟨bifunction _ ⟨*od ⟨char @¹ _ _⟩ ⟨varargs _ _ _⟩⟩ ⟨*od ⟨void _ _ _⟩⟩⟩
+      $s.ensureType printf ⟨bifunction _ ⟨*od ⟨char @¹ _ _⟩ ⟨varargs _ _ _⟩⟩ ⟨*od ⟨void _ _ _⟩⟩⟩
       $ir.resetArgs 
       $ir.defsynonym 𝜏1 ⟨char @¹ temp 2⟩ 
       $ir.createTemp 𝜏1
