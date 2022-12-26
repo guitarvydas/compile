@@ -1,0 +1,63 @@
+
+$g.pushScope ()
+
+#include <stdio.h>
+
+  $g.defsynonym identity ⟨function “identity”
+                                   ⟨*od ⟨char @¹ _ _⟩⟩ // param - c
+                                   ⟨*od ⟨char @¹ _ _⟩⟩⟩ // return type - char
+    ⟪
+     $g.pushScope (identity) ⟪
+char identity (char c) {
+       $g.defsynonym c ⟨char @¹ param 1⟩⟩ ⟪
+        $s.ensureInScope c ⟪
+         $ir.beginFunction “identity” 1 ⟪
+  return c;
+          $ir.return ⟨od char @¹ param 1⟩ ⟪
+           $g.popScope () ⟪
+            $ir.endFunction “identity” 1
+}
+             ⟫⟫⟫⟫⟫⟫⟫
+
+int main (int argc, char **argv) {
+  $g.defsynonym main ⟨function “main”
+                               ⟨*od ⟨int @¹ _ _⟩⟨char @² _ _⟩⟩ // params - argc, argv
+                               ⟨*od ⟨void _ _ _⟩⟩⟩ // return type - none (void) ⟪
+    $g.pushScope (main) ⟪
+      $g.defsynonym “argc” ⟨int @¹ param 1⟩⟩ ⟪
+      $g.defsynonym “argv” ⟨char @² param 2⟩⟩ ⟪
+      $ir.beginFunction “main” 2 ⟪
+  char x = identity ('x');
+      $s.ensureInScope x ⟪
+      $s.ensureInScope identity ⟪
+      $s.ensureType identity ⟨function _ ⟨*od ⟨char @¹ _ _⟩⟩ ⟨*od ⟨char @¹ _ _⟩⟩⟩ ⟪
+      $g.defsynonym x ⟨char @¹ temp 1⟩⟩ ⟪
+      $ir.resetArgs ⟪
+      $ir.mutate ⟨char @¹ temp 1⟩ ⟨char - temp “x”⟩  ⟪
+      $ir.assignArg 1 ⟨char @¹ temp 1⟩ ⟪
+      $ir.createTemp ⟨char @¹ temp 2⟩ ⟪
+      $ir.defsynonym 𝜏0 ⟨char @¹ temp 2⟩ ⟪
+      $ir.call ⟨function identity _ _⟩ ⟪
+      $ir.mutate 𝜏0 ⟨char @¹ result 1⟩ ⟪
+  printf ("result = %c\n", x);
+      $s.ensureInScope x ⟪
+      $s.ensureInScope printf ⟪
+      $s.ensureType printf ⟨function _ ⟨*od ⟨char @¹ _ _⟩ ⟨varargs⟩⟩ ⟨*od ⟨void _ _ _⟩⟩⟩ ⟪
+      $ir.resetArgs ⟪
+      $ir.createTemp ⟨char @¹ temp 2⟩ ⟪
+      $ir.defsynonym 𝜏1 ⟨char @¹ temp 2⟩ ⟪
+      $ir.mutate ⟨char @¹ string 2⟩ ⟨char - temp “result = %c\n”⟩ ⟪
+      $ir.assignArg 1 ⟨char @¹ string 2⟩ ⟪
+      $ir.appendArg x ⟪
+      $ir.call ⟨function printf_ _⟩ ⟪
+      $ir.mutate 𝜏1 ⟨char @¹ result 1⟩ ⟪
+      $ir.return ⟨od void _ _ _⟩ ⟪
+}
+    $g.popScope ⟪
+      $ir.endFunction “main” 2 ⟪
+
+
+      ⟫⟫⟫⟫⟫⟫⟫⟫⟫⟫
+       ⟫⟫⟫⟫⟫⟫⟫⟫⟫⟫
+        ⟫⟫⟫⟫⟫⟫⟫⟫⟫⟫
+       

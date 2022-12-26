@@ -1,0 +1,61 @@
+/*
+#include <stdio.h>
+
+char identity (char c) {
+  return c;
+}
+
+int main (int argc, char **argv) {
+  char x = identity ('x');
+  printf ("result = %c\n", x);
+}
+*/
+
+❲include sys❳ “stdio.h”
+
+def ⟨function ⟨dd 0 code identity 0 1 “identity”⟩ ⟨type char⟩⟩ 
+{
+  return ⟨char ⟨dd 1 arg 0 0 1 "c"⟩⟩
+}
+
+def ⟨function ⟨dd 0 code main 0 1 “main”⟩ ⟨type int⟩⟩
+{
+  ❲set arg❳		1,⟨type char⟩,⟨dd 1 ❲char constant❳ “x” 0 1 “x”⟩
+  call			⟨function ⟨dd 0 code identity 0 1 “identity”⟩ ⟨type char⟩⟩
+  ❲move result❳	⟨type char⟩,⟨dd 1 local 0 0 1 “x”⟩
+  ❲set arg❳		1,⟨type string⟩,⟨dd 1 ❲string constant❳ “result = %c\n” 0 1 ϕ⟩
+  ❲set arg❳		2,⟨type char⟩,⟨dd 1 local 0 0 1 “x”⟩
+  call			⟨function ⟨dd 0 code printf 0 1 “printf”⟩ ⟨type void⟩⟩
+}
+
+
+---
+
+allocation spaces:
+  ❲char constant❳
+  ❲string constant❳
+  code
+  local
+
+enums:
+⟨type char⟩
+⟨type int⟩
+⟨type void⟩
+  
+operations:
+  ❲set arg❳
+  call
+  ❲move result❳
+  return
+
+declarative types:
+  ⟨char ...⟩       -- type reference with info ; info is evaluated
+  ⟨#direction ...⟩ -- type reference with symbolic info (like an enum) ; names in ... are quoted
+
+
+
+
+⟨
+⟩
+❲
+❳

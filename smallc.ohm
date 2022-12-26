@@ -1,0 +1,140 @@
+smallc {
+Main = TopLevel+
+TopLevel =
+  | Asm
+  | Include
+  | Define
+  | GlobalVariable
+  | Function
+
+Asm = "#asm" (~"#endasm" any)+ "#endasm"
+Include = 
+  | "#include" string -- path
+  | "#include" "<" id ("." id)* ">" -- sys
+
+Define = "#define" id Expression
+GlobalVariable = TypedVariableDecl
+Function =
+  | Type? id "(" ListOf<TypedParameterDecl, ","> ")" Compound -- withformals
+  | Type? id "(" ")" Compound -- noformals
+
+FormalDeclaration = TypedVariableDecl
+Formal = id
+ParameterID = id
+
+Type = kwint | kwchar
+
+Compound = "{" Statement* "}"
+
+Statement =
+  | Compound
+  | LocalVariable
+  | If
+  | While
+  | Return
+  | Break
+  | Continue
+  | EmptyStatement
+  | FunctionCall
+  | Assignment
+  | ExpressionStatement
+  
+LocalVariable = TypedVariableDecl
+FunctionCall = id "(" ListOf<Actual,","> ")" ";"
+If =
+  | kwif "(" Expression ")" Statement kwelse Statement -- ifthenelse
+  | kwif "(" Expression ")" Statement -- ifthen
+
+While = kwwhile "(" Expression ")" Statement
+Return = kwreturn Expression? ";"
+Break = kwbreak ";"
+Continue = kwcontinue ";"
+
+Assignment = Lval "=" Expression ";"
+ExpressionStatement = Expression ";"
+EmptyStatement = ";"
+
+Lval = Hier10
+
+Index = "[" Expression "]"
+DeclarationIndex = "[" Expression? "]"
+
+TypedParameterDecl = Type VariableDeclBody
+TypedVariableDecl = Type ListOf<VariableDeclBody,","> ";"
+VariableDeclBody = "*"* id DeclarationIndex? Initialization?
+Initialization = "=" Expression
+
+Expression = 
+  | simpleAtomExpression
+  | Hier1
+
+simpleAtomExpression =
+  | string -- string
+  | char -- char
+  | number -- number
+  | id &(";" | ")" | "]") -- id
+
+Hier1 = Hier2 ("=" ~"=" Hier1)*
+Hier2 = Hier3 ("|" Hier3)*
+Hier3 = Hier4 ("^" Hier4)*
+Hier4 = Hier5 ("&" Hier5)*
+Hier5 = Hier6 (("==" | "!=") Hier6)*
+Hier6 = Hier7 ( ("<=" | ">=" | (">" ~">" ~"=") | ("<" ~"<" ~"=")) Hier7)*
+Hier7 = Hier8 ((">>" | "<<") Hier8)*
+Hier8 = Hier9 (( ("+" ~"+") | ("-" ~"-")) Hier9)*
+Hier9 = Hier10 (("*" | "/" | "%") Hier10)*
+
+Hier10 =
+  | "++" Hier10 -- preinc
+  | "--" Hier10 -- predec
+  | "*" Hier10  -- indir
+  | "&" Hier10  -- addr
+  | "+" Hier11  -- plus
+  | "-" Hier11  -- minus
+  | Hier11 "++" -- postinc
+  | Hier11 "--" -- postdec
+  | Hier11 -- basic
+  
+Hier11 = 
+  | Primary "[" Expression "]" -- subscripted
+  | Primary "(" ListOf<Actual,","> ")" -- functioncall
+  | Primary -- basic
+
+Primary =
+  | "(" Expression ")" -- parenthesizedexpr
+  | Atom -- atom
+Atom =
+  | string -- string
+  | char -- char
+  | number -- number
+  | id -- id
+
+booleanop =
+  | "=="
+  | "!="
+  | "<="
+  | ">="
+  
+Actual = Expression
+
+string = dq (~dq any)* dq
+char = sq (~sq any)* sq
+sq = "'"
+dq = "\""
+number = digit+
+
+kwint = "int" ~idRest
+kwchar = "char" ~idRest
+kwif = "if" ~idRest
+kwelse = "else" ~idRest
+kwwhile = "while" ~idRest
+kwbreak = "break" ~idRest
+kwcontinue = "continue" ~idRest
+kwreturn = "return" ~idRest
+keyword = kwint | kwchar | kwif | kwelse | kwwhile | kwbreak | kwcontinue | kwreturn
+id = ~keyword letter idRest*
+idRest = "_" | letter | alnum
+
+comment = "/*" (~"*/" any)* "*/"
+space += comment
+}

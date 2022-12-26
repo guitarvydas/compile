@@ -1,0 +1,11 @@
+    functionLabel “identity”
+      return ⟨char ⟨dd 1 param “c”⟩⟩
+    functionLabel “main”
+      pushArg 0 ⟨char ⟨dd 2 temp “x” “x”⟩⟩
+      call ⟨dd 1 code “identity” “identity”⟩
+      popReturn 0 ⟨char ⟨dd 1 temp “𝜏0” _⟩⟩
+      newTemp 0 ⟨char ⟨dd 0 string “𝜏1” “result = %c\n”⟩⟩
+      pushArg 0 ⟨char ⟨dd 0 string “𝜏1” _⟩⟩
+      pushArg 1 ⟨char ⟨dd 2 temp “𝜏0” _⟩⟩
+      call ⟨dd 1 code “printf” “printf”⟩
+      popReturn 0 ⟨void ⟨dd 1 temp “𝜏1” _⟩⟩

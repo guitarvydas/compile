@@ -1,0 +1,26 @@
+$g.pushScope ()
+
+#include <stdio.h>
+
+  $g.defsynonym identity ⟨function ⟨dd 0 code “identity” “identity”⟩ 
+                                   ⟨dd* ⟨char 1 _ _⟩⟩ // param - c
+                                   ⟨dd* ⟨char 1 _ _⟩⟩ // return type - char
+    $g.pushScope (identity)
+char identity (char c) {
+      $d.defsynonym c ⟨char @¹ param⟩
+  return c;
+}  
+    $g.popScope ()
+
+int main (int argc, char **argv) {
+  $g.defsynonym main ⟨function ⟨dd 0 code main 0 1 “main”⟩
+                                   ⟨dd* ⟨int 1 _ _⟩⟨char 2 _ _⟩⟩ // params - argc, argv
+                                   ⟨dd* ⟨void 0 _ _⟩⟩ // return type - none (void)
+    $g.pushScope (main)
+      $g.defsynonym argc ⟨int @¹ param⟩
+      $g.defsynonym argv ⟨char ⟨dd 2 param "argv"⟩⟩
+  char x = identity ('x');
+      $g.defsynonym x ⟨char ⟨dd 1 temp "x"⟩⟩
+  printf ("result = %c\n", x);
+}
+    $g.popScope ()
