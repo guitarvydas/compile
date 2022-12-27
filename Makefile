@@ -13,6 +13,16 @@ lisp:
 	| ./ir2lisp.py \
 	| ./bred/bred defsyn.bred bred \
 	| ./bred/bred irdefsyn.bred bred \
+	| ./bred/bred beginfunction.bred bred \
+	| ./bred/bred endfunction.bred bred \
+	| ./bred/bred resetargs.bred bred \
+	| ./bred/bred mutate.bred bred \
+	| ./bred/bred pusharg.bred bred \
+	| ./bred/bred createtemp.bred bred \
+	| ./bred/bred call.bred bred \
+	| ./bred/bred return.bred bred \
+	| ./bred/bred pushscope.bred bred \
+	| ./bred/bred popscope.bred bred \
 	| cat -
 
 lisp-run:

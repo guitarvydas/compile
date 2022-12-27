@@ -7,7 +7,7 @@
                                    ⟨*od ⟨char @¹ _ _⟩⟩ // param - c
                                    ⟨*od ⟨char @¹ _ _⟩⟩⟩ // return type - char
     
-     %g.pushScope identity
+     %g.pushScope
 //char identity (char c) {
      %g.defsynonym c ⟨char @¹ param 1⟩
      %s.ensureInScope c 
@@ -22,10 +22,10 @@
   %g.defsynonym main ⟨function main
                                ⟨*od ⟨int @¹ _ _⟩⟨char @² _ _⟩⟩ // params - argc, argv
                                ⟨*od ⟨void _ _ _⟩⟩⟩ // return type - none (void) 
-    %g.pushScope main
+    %g.pushScope
       %g.defsynonym argc ⟨int @¹ param 1⟩
       %g.defsynonym argv ⟨char @² param 2⟩
-      %ir.beginFunction main 2 
+      %ir.beginFunction main
 //  char x = identity ('x');
       %s.ensureInScope x 
       %s.ensureInScope identity 
@@ -54,4 +54,4 @@
       %ir.return ⟨void _ _ _⟩ 
 //}
     %g.popScope 
-      %ir.endFunction main 2 
+      %ir.endFunction main
