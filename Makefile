@@ -1,8 +1,17 @@
 
-all: lisp-test0
+all: lisp-test0aa
 
 repos:
 	multigit -r
+
+lisp-test0aa:
+	grep -v '$s\.' <ex0a.ircode >/tmp/test0aa
+	./ir2lisp.py </tmp/test0aa >/tmp/test0a
+	cat /tmp/test0a
+
+lisp-test0a:
+	./bred/db-bred ex0a.bred bred </tmp/test0a
+	| cat -
 
 lisp-test0:
 	grep -v '$s\.' <ex0.ircode \

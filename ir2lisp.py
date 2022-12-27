@@ -18,5 +18,6 @@ for line in sys.stdin:
       .replace ('⟨bifunction ', '(od-bifunction ')\
       .replace ('//', ';;')\
       .replace ('𝜏', '%%')\
+      .replace ('⟨', '(')\
       .replace ('⟩', ')')
     print (r, end='')
