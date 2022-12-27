@@ -27,6 +27,6 @@ NestingGrammar {
   nameRest [c] = ‛«c»’
 
   literal [c] = ‛«c»’
-  pattern [_k1 _k2 _k3 _s4 name ] = ‛($test «name»)’
+  pattern [_k1 _s2 name ] = ‛($test «name»)’
 }
 
