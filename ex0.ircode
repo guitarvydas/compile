@@ -1,9 +1,2 @@
-  $g.defsynonym identity0 (functi0n identity
-    (u (d)) (v (e)))
-  $g.defsynonym identity0 (functi0n identity 
-           (x (c))
-           (y (b)))
-  $g.defsynonym identity ⟨function identity
-                                   ⟨*od ⟨char @¹ _ _⟩⟩ // param - c
-                                   ⟨*od ⟨char @¹ _ _⟩⟩⟩ // return type - char
+xxx (f i)
     

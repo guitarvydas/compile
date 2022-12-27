@@ -7,8 +7,7 @@ repos:
 lisp-test0:
 	grep -v '$s\.' <ex0.ircode \
 	| ./ir2lisp.py \
-	| ./bred/db-bred defsyn.bred bred \
-	| ./bred/db-bred irdefsyn.bred bred \
+	| ./bred/db-bred test.bred bred \
 	| cat -
 
 lisp:
