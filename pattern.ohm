@@ -54,6 +54,6 @@ NestingGrammar {
   angleprefix = "=" | "<" | ">"
   anglesuffix = "=" | "<" | ">"
 
-  pattern = "!" space+ iteminpattern space+ iteminpattern 
-  literal = | "!" | " " | " " | bracket
+  pattern = "$" "g" "." "d" "e" "f" "s" "y" "n" "o" "n" "y" "m" space+ iteminpattern space+ iteminpattern 
+  literal = | "$" | "g" | "." | "d" | "e" | "f" | "s" | "y" | "n" | "o" | "n" | "y" | "m" | " " | " " | bracket
 }

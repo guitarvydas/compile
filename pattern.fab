@@ -27,6 +27,6 @@ NestingGrammar {
   nameRest [c] = ‛«c»’
 
   literal [c] = ‛«c»’
-  pattern [_k1 _s2 name _s3 syn ] = ‛($g-defsynonym «name» «syn»)’
+  pattern [_k1 _k2 _k3 _k4 _k5 _k6 _k7 _k8 _k9 _k10 _k11 _k12 _k13 _s14 name _s15 syn ] = ‛($g-defsynonym «name» «syn»)’
 }
 
