@@ -1,13 +1,21 @@
 
-all: lisp
+all: lisp-test0
 
 repos:
 	multigit -r
 
+lisp-test0:
+	grep -v '$s\.' <ex0.ircode \
+	| ./ir2lisp.py \
+	| ./bred/db-bred defsyn.bred bred \
+	| ./bred/db-bred irdefsyn.bred bred \
+	| cat -
+
 lisp:
-	./ir2lisp.py <ex1.ircode \
+	grep -v '$s\.' <ex1.ircode \
+	| ./ir2lisp.py \
 	| ./bred/bred defsyn.bred bred \
-	| ./bred/bred defsyn.bred bred \
+	| ./bred/bred irdefsyn.bred bred \
 	| cat -
 
 lisp-run:

@@ -1,13 +1,13 @@
 
-$g.pushScope ()
+$g.pushScope
 
 //#include <stdio.h>
 
-  $g.defsynonym identity ⟨function “identity”
+  $g.defsynonym identity ⟨function identity
                                    ⟨*od ⟨char @¹ _ _⟩⟩ // param - c
                                    ⟨*od ⟨char @¹ _ _⟩⟩⟩ // return type - char
     
-     $g.pushScope (identity) 
+     $g.pushScope identity
 //char identity (char c) {
      $g.defsynonym c ⟨char @¹ param 1⟩
      $s.ensureInScope c 
@@ -15,17 +15,17 @@ $g.pushScope ()
 //  return c;
      $ir.return c
 //}
-     $g.popScope () 
+     $g.popScope
      $ir.endFunction identity
 
 //int main (int argc, char **argv) {
-  $g.defsynonym main ⟨function “main”
+  $g.defsynonym main ⟨function main
                                ⟨*od ⟨int @¹ _ _⟩⟨char @² _ _⟩⟩ // params - argc, argv
                                ⟨*od ⟨void _ _ _⟩⟩⟩ // return type - none (void) 
-    $g.pushScope (main) 
-      $g.defsynonym “argc” ⟨int @¹ param 1⟩
-      $g.defsynonym “argv” ⟨char @² param 2⟩
-      $ir.beginFunction “main” 2 
+    $g.pushScope main
+      $g.defsynonym argc ⟨int @¹ param 1⟩
+      $g.defsynonym argv ⟨char @² param 2⟩
+      $ir.beginFunction main 2 
 //  char x = identity ('x');
       $s.ensureInScope x 
       $s.ensureInScope identity 
@@ -54,4 +54,4 @@ $g.pushScope ()
       $ir.return ⟨void _ _ _⟩ 
 //}
     $g.popScope 
-      $ir.endFunction “main” 2 
+      $ir.endFunction main 2 
