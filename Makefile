@@ -4,6 +4,10 @@ all: lisp
 repos:
 	multigit -r
 
+npmstuff:
+	npm install ohm-js yargs atob pako
+	npm install cli
+	npm install js-beautify
 lisp:
 	./rmsem.py <ex1.ircode \
 	| ./ir2lisp.py \
