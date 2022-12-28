@@ -23,7 +23,7 @@ lisp:
 	| ./bred/bred return.bred bred \
 	| ./bred/bred pushscope.bred bred \
 	| ./bred/bred popscope.bred bred \
-	| cat -
+	| cat - >ex1.lisp
 
 lisp-run:
 	sbcl --noinform --load ex1.lisp --eval '(%test)' --quit 2>/dev/null
