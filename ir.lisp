@@ -4,31 +4,6 @@
 ;;   that contains the same index, overriding previous values at that index due to the
 ;;   linear search strategy (this can be later optimized to mutate values at given indices)
 
-(defclass od ()
-  ((dtype :accessor type :initarg :dtype)
-   (indirection :accessor indirection :initarg :indirection)
-   (base :accessor base :initarg :base)
-   (index :accessor index :initarg :index)))
-
-;;; stacks of indexed values 
-;;;   pairs {index value}
-(defclass sparse-array ()
-  ((stack :accessor stack :initform nil))
-
-(defmethod vput ((self sparse-array) index v)
-  (push (stack self) (list index v)))
-
-(defmethod vget ((self sparse-array) index)
-  (labels ((top-down-search (stack index)))
-    (if (null stack)
-        (assert nil)
-      (let ((item (first stack)))
-        (if (eq (first item) index)
-            (second item)
-          (top-down-search (rest stack)))))))
-                      
-(defun vstack ()
-  (make-instance 'sparse-array))
 
 (defparameter *code-stack* (vstack))
 (defparameter *scope-stack* (vstack))
@@ -38,10 +13,12 @@
 (defparameter *results-stack* (vstack))
 
 (defparameter *instruction-stack* nil)
+(defparameter *synonyms* nil)
 
 
-(setf _ '_)
-(setf @1 1)
+(define-symbol-macro @0 0)
+(define-symbol-macro @1 1)
+(define-symbol-macro @2 2)
 
 (defclass od-char-class (od)
   ())
@@ -52,14 +29,11 @@
 (defclass od-void-class (od)
   ())
 
-(defun od (dtype k b i)
-  (make-instance 'od :dtype 'dtype :indirection k :base b :index (1- i)))
-
 (defun od-char (k b i)
   (od 'char k b i))
 
-(defun od-function (k b i)
-  (od 'function k b i))
+(defun od-function (k b i signature)
+  (od 'function k b i signature))
 
 (defun od-void (k b i)
   (od 'void k b i))
@@ -130,7 +104,7 @@
   ;; put the lval template od into a mapping table at "name"
   ;; for now, each entry is a stack, with the most recent entry being first and overriding
   ;;  all other entries in that slot
-  (multiple-value-bind (stack success) (gethash name *synonyms*)
+  (multiple-value-bind (stack success) (gethash name *synonyms*) (declare (ignore stack))
      (if success
 	 (push od (gethash name *synonyms*))
        (setf (gethash name *synonyms*) (list od)))))
@@ -142,6 +116,7 @@
   (defsynonym name od))
 
 (defun $ir-beginFunction (name)
+  (declare (ignore name))
   ($-clear-temps)
   ($-reverse-args))
 
@@ -164,7 +139,7 @@
 
 (defun $ir-mutate (dest src)
   (let ((v (fetch src)))
-    (dest assign v)))
+    (assign dest v)))
 
 (defun $ir-createTemp (od)
   ;; push {index od} pair onto temps stack
@@ -180,19 +155,6 @@
 
 
     
-
-
-(defun $ir-test ()
-  (setf *code-stack* (vstack))
-  (*code-stack* vput "identity" *script-identity*) 
-  (*code-stack* vput "main" *script-main*)
-  (setf *args-stack* (vstack)
-	*temps-stack* (vstack)
-	*parameters-stack* (vstack)
-	*results-stack* (vstack))
-  (setf *instruction-stack* (list (fetch `(od-function 0 'main _))))
-  ($-run))
-
 
 
 (defun $-clear-temps ()
@@ -212,48 +174,23 @@
 	(funcall instruction)))))
 
 
-;;;; toolbox: simplistic implementation of Operand Descriptors as sparse arrays - stacks of indexed values, no mutation, linear search from top
-;;;;  of stack for first index that matches (multiple values with the same index can appear in the stack, but the most recent value with an
-;;;;  index overrides all other values with that same index)
 
-(defmethod od-fetch ((self od))
-  (case (indirection self)
-    (0 (index self))
-    (1 (let ((v (sparse-array-get (base self) (index self)))
-             (dty (dtype self)))
-         (case dty
-           (pointer (assert (numberp v)))
-           (number (assert (numberp v)))
-           (char (if (characterp v)
-                     nil
-                   (if (numberp v)
-                       (setf v (code-char v))
-                     (if (stringp v)
-                         (setf v (char v 0))
-                       (assert nil)))))
-           (void (setf v 'void))
-           (function (assert (symbolp v)))
-           (otherwise (assert nil)))
-         v))
-    (otherwise
-     (let ((pointer (fetch (od :dtype 'pointer :indirection 1 :base (base self) :index (index self)))))
-       (fetch (od :dtype (dtype self) :indirection (1- (indirection self)) :base (base self) :index pointer))))))
+;;;
 
-(defun fetch (x)
-  (if (symbolp x)
-      ()
-    (od-fetch x)))
+(defun reset-all ()
+  (setf *code-stack* (vstack)
+        *scope-stack* (vstack)
+        *temps-stack* (vstack)
+        *args-stack* (vstack)
+        *parameters-stack* (vstack)
+        *results-stack* (vstack)
+        *instruction-stack* nil
+        *synonyms* nil))
 
-(defmethod assign ((self od) v)
-  (assert (not (equal (dtype self) 'void)))
-  (case (indirection self)
-    (0 (setf (index self) v))
-    (1 (vput (base self) (index self) v))
-    (otherwise
-     (let ((pointer (fetch (od :dtype 'pointer :indirection 1 :base (base self) :index (index self)))))
-       (let ((obj (od (dtype self) (1- (indirection self) (base self) pointer))))
-         (assign obj v))))))
-
-
-(defmethod assign ((self od-void-class) v)
-  (error "cannot assign to void"))
+  
+;;;
+(defun irtest ()
+  (reset-all)
+  (let ((c (od-char 1 *temps-stack* 0)))
+    (assign c #\X)
+    (format *standard-output* "~a~%" (fetch c))))
