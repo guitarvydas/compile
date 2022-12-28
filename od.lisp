@@ -49,6 +49,6 @@
          (assign obj v))))))
 
 (defun od (dtype k b i &optional (description nil))
-  (make-instance 'od :dtype dtype :indirection k :base b :index (1- i) :description description))
+  (make-instance 'od :dtype dtype :indirection k :base b :index i :description description))
 
 

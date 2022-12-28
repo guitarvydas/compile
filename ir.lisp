@@ -19,6 +19,7 @@
 (define-symbol-macro @0 0)
 (define-symbol-macro @1 1)
 (define-symbol-macro @2 2)
+(define-symbol-macro _ :_)
 
 (defclass od-char-class (od)
   ())
@@ -42,9 +43,9 @@
 ;; scripts
 
 (defparameter *script-identity* `(
-  ($g-defsynonym identity (od-function identity
-                                   (list (od-char @1 :_ :_)) ;; param - c
-                                   (list (od-char @1 :_ :_)))) ;; return type - char
+  ($g-defsynonym identity (od-function - *code-stack* "identity" (list
+                                                            (list (od-char @1 _ _)) ;; param - c
+                                                            (list (od-char @1 _ _))))) ;; return type - char
     
      ($g-pushScope)
 ;;char identity (char c) {
@@ -59,9 +60,10 @@
 
 (defparameter *script-main* `(
 ;;int main (int argc, char **argv) {
-  ($g-defsynonym main (od-function main
-                               (list (od-int @1 :_ :_)(od-char @2 :_ :_)) ;; params - argc, argv
-                               (list (od-void :_ :_ :_)))) ;; return type - none (void) 
+  ($g-defsynonym main (od-function 0 *code-stack* "main" (list ;; signature
+                                                    (list (od-int @1 _ _)(od-char @2 _ _)) ;; params - argc, argv
+                                                    (list (od-void _ _ _))))) ;; return type - none (void)
+
     ($g-pushScope)
       ($g-defsynonym argc (od-int @1 param 1))
       ($g-defsynonym argv (od-char @2 param 2))
@@ -76,7 +78,7 @@
       ($ir-call identity)
       ($ir-mutate  %%0 (od-char @1 result 1)) 
 ;;  printf ("result = %c\n", x);
-      ($g-defsynonym printf (od-bifunction :_ (list (od-char @1 :_ :_) (od-varargs :_ :_ :_)) (list (od-void :_ :_ :_))))
+      ($g-defsynonym printf (od-bifunction _ (list (od-char @1 _ _) (od-varargs _ _ _)) (list (od-void _ _ _))))
       ($ir-resetArgs) 
       ($ir-defsynonym %%1 (od-char @1 temp 2)) 
       ($ir-createTemp %%1)
@@ -85,7 +87,7 @@
       ($ir-pushArg x) 
       ($ir-call printf) 
       ($ir-mutate  %%1 (od-char @1 result 1)) 
-      ($ir-return (od-void :_ :_ :_)) 
+      ($ir-return (od-void _ _ _)) 
 ;;}
     ($g-popScope) 
       ($ir-endFunction main)
@@ -129,7 +131,7 @@
 		 (decf n))))))
 
 (defun $ir-return (od)
-  (push *results-stack* (fetch od)))
+  (push (fetch od) *results-stack*))
 
 (defun $ir-resetArgs ()
   (setf *args-stack* (vstack)))
@@ -173,7 +175,10 @@
       (let ((instruction (pop (first *instruction-stack*))))
 	(funcall instruction)))))
 
-
+(defmethod formals ((self od))
+  (assert (eq 'function (dtype self)))
+  (let ((desc (description self)))
+    (first desc)))
 
 ;;;
 
