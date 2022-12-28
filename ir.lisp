@@ -194,8 +194,14 @@
 
   
 ;;;
-(defun irtest ()
+(defun irtest0 ()
   (reset-all)
   (let ((c (od-char 1 *temps-stack* 0)))
+    (assign c #\X)
+    (format *standard-output* "~a~%" (fetch c))))
+
+(defun irtest1 ()
+  (reset-all)
+  (let ((c (od-char 2 *temps-stack* 0)))
     (assign c #\X)
     (format *standard-output* "~a~%" (fetch c))))
