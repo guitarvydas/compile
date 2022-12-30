@@ -1,3 +1,5 @@
+(proclaim '(optimize (debug 3) (safety 3) (speed 0)))
+
 ;; scripts
 
 (defparameter *script-identity* `(
@@ -31,7 +33,7 @@
 ;;  char x = identity ('x');
       ($g-defsynonym x (varod "char" temp 0))
       ($ir-freshargs)
-       ($ir-createConstant %%0 (constod "char" "x"))
+       ($ir-createConstant %%0 (constod "char" "x") 0)
        ($ir-pushArg %%0)
          ($ir-freshreturns)
           ($ir-call identity)
@@ -43,7 +45,7 @@
       ($ir-freshargs)
        ($ir-defsynonym %%1 (varod "char" temp 1))
        ($ir-createTemp %%1)
-       ($ir-createConstant %%2 (constod "string" "result = %c\n"))
+       ($ir-createConstant %%2 (constod "string" "result = %c\n") 1)
        ($ir-pushArg %%2)
        ($ir-pushArg x) 
         ($ir-freshreturns)

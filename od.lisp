@@ -1,3 +1,5 @@
+(proclaim '(optimize (debug 3) (safety 3) (speed 0)))
+
 (defparameter *synonyms* nil)
 
 (defclass od ()
@@ -7,7 +9,7 @@
 
 
 (defclass od-direct (od)
-  ((value :accessor value)))
+  ((value :accessor value :initarg :value)))
 
 (defclass od-indirect (od) ())  ;; dtype = char | number | string | pointer
 
@@ -46,3 +48,17 @@
 (defmethod save ((self od-pointer) v)
   (let ((target (nth (index self) (base self))))
     (save target v)))
+
+
+(defmethod function-name ((self od-direct))
+  (assert (string= "function" (dtype self)))
+  (first (value self)))
+(defmethod function-inputs ((self od-direct))
+  (assert (string= "function" (dtype self)))
+  (second (value self)))
+(defmethod function-outputs ((self od-direct))
+  (assert (string= "function" (dtype self)))
+  (third (value self)))
+(defmethod return-type ((self od-direct))
+  (let ((outs (function-outputs self)))
+    (first outs)))
