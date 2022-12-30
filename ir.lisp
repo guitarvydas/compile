@@ -1,4 +1,4 @@
-(proclaim '(optimize (debug 3) (safety 3) (speed 0)))
+(declaim (optimize (debug 3) (safety 3) (speed 0)))
 
 ;; each allocation space is a sparse array - a stack that contains {index value} pairs
 ;; access of an item is a linear search for its index beginning at the top of the stack

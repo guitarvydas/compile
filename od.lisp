@@ -1,4 +1,4 @@
-(proclaim '(optimize (debug 3) (safety 3) (speed 0)))
+(declaim (optimize (debug 3) (safety 3) (speed 0)))
 
 (defparameter *synonyms* nil)
 
@@ -28,7 +28,7 @@
     (value d)))
 
 (defmethod value ((self od-indirect)) ;; char | number | string
-  (nth (index self) (base self)))
+  (vget (base self) (index self)))
 
 (defmethod value ((self od-pointer))
   (let ((target (nth (index self) (base self))))
@@ -43,7 +43,7 @@
   (setf (value self) v))
 
 (defmethod save ((self od-indirect) v)
-  (setf (nth (index self) (base self)) v))
+  (vput (base self) (index self) v))
 
 (defmethod save ((self od-pointer) v)
   (let ((target (nth (index self) (base self))))

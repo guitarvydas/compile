@@ -1,4 +1,4 @@
-(proclaim '(optimize (debug 3) (safety 3) (speed 0)))
+(declaim (optimize (debug 3) (safety 3) (speed 0)))
 
 ;;; stacks of indexed values 
 ;;;   pairs {index value}
