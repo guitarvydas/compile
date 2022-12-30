@@ -7,6 +7,8 @@
 
 (defparameter *globals* (vstack))
 (defparameter *code* (vstack))
+(defparameter *constant-index* -1)
+(defparameter *costants* (vstack))
 (defparameter *scope* (vstack))
 (defparameter temp (vstack))
 (defparameter arg (vstack))
@@ -19,67 +21,36 @@
 
 (define-symbol-macro _ :_)
 
-varod == variable-od
-constod == constant od
-pointerod == pointer-od
-voidod = void od
-funcod == function od
-bifuncod = built-in function od
+(defun next-constant ()
+  (let ((n (incf *constant-index*)))
+    n))
 
-;; scripts
+;; varod == variable-od
+;; constod == constant od
+;; pointerod == pointer-od
+;; voidod = void od
+;; funcod == function od
+;; bifuncod = built-in function od
 
-(defparameter *script-identity* `(
-  ($g-defsynonym identity (funcod
-			     "identity"
-			     (list "char") ;; param - c
-			     (list "char"))) ;; return type - char
-    
-     ($g-pushScope)
-;;char identity (char c) {
-     ($g-defsynonym c (varod "char" parameters 1))
-     ($ir-beginFunction identity) 
-;;  return c;
-     ($ir-return c)
-;;}
-     ($g-popScope)
-     ($ir-endFunction identity)
-     ))
+(defun varod (typename space offset)
+  (make-instance 'od-indirect :dtype typename :base space :index offset))
 
-(defparameter *script-main* `(
-;;int main (int argc, char **argv) {
-  ($g-defsynonym main (funcod
-                         "main"
-                         (list "int" "char**") ;; params - argc, argv
-                         (list "void")) ;; return type - none (void)
+(defun pointerod (space offset)
+  (make-instance 'od-indirect :dtype "pointer" :base space :index offset))
 
-    ($g-pushScope)
-      ($g-defsynonym argc (varod "int" parameter 0))
-      ($g-defsynonym argv (pointerod "char**" parameter 1))
-      ($ir-beginFunction main)
-;;  char x = identity ('x');
-      ($g-defsynonym x (varod "char" temp 0)) 
-      ($ir-resetArgs) 
-      ($ir-createConstant %%0 (constod "char" "x"))
-      ($ir-pushArg %%0)
-      ($ir-defsynonym %%0 (varod "char" temp 1)) 
-      ($ir-call identity)
-      (save %%0 (varod "char" results)) 
-;;  printf ("result = %c\n", x);
-      ($g-defsynonym printf (bifuncod "printf" (list "string" "varargs") (list "void")))
-      ($ir-resetArgs) 
-      ($ir-defsynonym %%1 (varod "char" temp 1)) 
-      ($ir-createTemp %%1)
-      ($ir-createConstant %%2 (constod "string" "result = %c\n"))
-      ($ir-pushArg %%2)
-      ($ir-pushArg x) 
-      ($ir-call printf) 
-      (save  %%1 (constod "char" result 0))
-      ($ir-return (voidod))
-;;}
-    ($g-popScope) 
-      ($ir-endFunction main)
-			      ))
-  
+(defun voidod (space offset)
+  (make-instance 'od-direct :dtype "void"))
+
+(defun constod (typename value)
+  (make-instance 'od-direct :dtype typename :base *constants* :index (next-constant)
+		 :value value))
+
+(defun funcdod (function-name inputs outputs)
+  (make-instance 'od-direct :dtype "function" :base *code* :index function-name :value (list function-name inputs outputs)))
+
+
+(defun bifuncdod (function-name inputs outputs)
+  (make-instance 'od-direct :dtype "built in function" :index function-name :value (list function-name inputs outputs)))
 
 ;; vm  
 
@@ -104,40 +75,61 @@ bifuncod = built-in function od
 (defun $ir-defsynonym (name od)
   (defsynonym name od))
 
+(defun lookup-synonym (name)
+  (gethash name *synonyms*))
+
 (defun $ir-beginFunction (name)
-  (declare (ignore name))
-  ($-clear-temps)
-  ($-reverse-args))
+  (let ((function-descriptor (lookup-synonym name)))
+    (declare (ignore name))
+    ;; emit label and function prequel ...>> (name function-descriptor)
 
-(defun $ir.endFunction (name)
+    ;; copy/move args to params, in correct order (a3 a2 a1) -> (p1 p2 p3)
+    (let ((p nil))
+      (loop for arg in *args*
+	    do (push arg p))
+      (venter *params*)
+      (loop for param in p
+	    do (push p *params*))
+
+      ($-fresh-temps))))
+
+(defun $ir-endFunction (name)
   (let ((function-descriptor (fetch name)))
-    (let ((n (length (formals function-descriptor))))
-      (loop while (> n 0)
-	    do (progn
-		 (pop *parameters*)
-		 (decf n))))))
+    (declare (ignore function-descriptor))
+    (vexit *parameters*)
+    ($-dispose-temps)))
 
-(defun $ir-return (od)
+(defun $ir-return-from-function (od)
   (push (fetch od) *results*))
-
-(defun $ir-resetArgs ()
-  (setf *args* (vstack)))
-
-(defun $ir-pushArg (v)
-  (push v *args*))
-
-(defun $ir-mutate (dest src)
-  (let ((v (fetch src)))
-    (assign dest v)))
-
-(defun $ir-createTemp (od)
-  ;; push {index od} pair onto temps stack
-  (push `(,(index od) ,od) *temps*))
 
 (defun $ir-call (od)
   (let ((script (fetch od)))
     (push *instructions* script)))
 
+(defun $ir-save-return-value (function-descriptor od)
+  (let ((rettype (return-type function-descriptor)))
+    (save od (varod rettype *results*))))
+  
+(defun $ir-freshargs ()
+  (venter *args*))
+(defun $ir-pushArg (v)
+  (push v *args*))
+(defun $ir-disposeargs ()
+  (vexit *args*))
+
+(defun $ir-createConstant (name od)
+  ;; in this version, createConstant is like defsynonym
+  ;; in an optimizer, createConstant can poke a set of bytes into the *constants* space, and return an od to that place, which becomes a synonym
+  ($g-defsynonym name od))
+
+(defun $ir-freshreturns ()
+  (venter *returns*))
+(defun $ir-disposereturns ()
+  (vexit *returns*))
+
+
+(defun $ir-createTemp (d)
+  (let ((od (value d)))
 
 ;; end vm
 
@@ -146,11 +138,10 @@ bifuncod = built-in function od
     
 
 
-(defun $-clear-temps ()
-  (setf *temps* nil))
-
-(defun $-reverse-args ()
-  (setf *args* (reverse *args*)))
+(defun $-fresh-temps ()
+  (venter temp))
+(defun $-dispose-temps ()
+  (vexit temp))
 
 (defun $-run ()
   (if (null *instructions*)
@@ -172,13 +163,15 @@ bifuncod = built-in function od
 (defun reset-all ()
   (setf global (vstack)
         *code* (vstack)
+        *costants* (vstack)
         *scope* (vstack)
         temp (vstack)
         arg (vstack)
         parameter (vstack)
         result (vstack)
         *instructions* nil
-        *synonyms* nil))
+        *synonyms* nil)
+  (setf *constant-index* -1))
 
   
 ;;;
@@ -191,12 +184,12 @@ bifuncod = built-in function od
 (defun irtest1 ()
   (reset-all)
   ;; create a character A in the globals area, at index 0
-  (let ((c (od-char 1 *globals* 0)))
-    (assign c #\A)
+  (let ((c (varod "char" *globals* 0)))
+    (save c #\A)
     (format *standard-output* "~a~%" (fetch c))
     ;; make a pointer to the character A, the pointer is in the globals area, too, at index 1
-    (let ((p (od-pointer 1 *globals* 1)))
-      (assign p c)
+    (let ((p (pointerod *globals* 1)))
+      (save p c)
       (format *standard-output* "*p = ~a~%" (fetch p)))))
 
 
