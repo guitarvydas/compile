@@ -2,7 +2,7 @@
 ;;;   pairs {index value}
 (defclass vstack ()
   ((stack :accessor stack :initform nil)
-   (scope-stack :accessor scope-stack :iniform nil)))
+   (scope-stack :accessor scope-stack :initform nil)))
 
 (defmethod venter ((self vstack))
   (push (scope-stack self) (stack self)))

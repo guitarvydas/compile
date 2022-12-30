@@ -16,7 +16,6 @@
 (defparameter result (vstack))
 
 (defparameter *instructions* nil)
-(defparameter *synonyms* nil)
 
 
 (define-symbol-macro _ :_)
