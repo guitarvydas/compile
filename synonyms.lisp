@@ -3,8 +3,6 @@
 (defclass synonym-table ()
   ((table :accessor table :initform (make-hash-table :test 'equal))))
 
-(defparameter *synonyms* (make-instance 'synonym-table))
-
 (defmethod defsynonym ((self synonym-table) name od)
   ;; put the lval template od into a mapping table at "name"
   ;; for now, each entry is a stack, with the most recent entry being first and overriding
