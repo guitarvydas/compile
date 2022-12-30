@@ -5,102 +5,60 @@
 ;;   linear search strategy (this can be later optimized to mutate values at given indices)
 
 
-(defparameter *code-stack* (vstack))
-(defparameter *scope-stack* (vstack))
-(defparameter *temps-stack* (vstack))
-(defparameter *args-stack* (vstack))
-(defparameter *parameters-stack* (vstack))
-(defparameter *results-stack* (vstack))
+(defparameter *globals* (vstack))
+(defparameter *code* (vstack))
+(defparameter *constant-index* -1)
+(defparameter *costants* (vstack))
+(defparameter *scope* (vstack))
+(defparameter temp (vstack))
+(defparameter arg (vstack))
+(defparameter parameter (vstack))
+(defparameter result (vstack))
 
-(defparameter *instruction-stack* nil)
+(defparameter *instructions* nil)
 (defparameter *synonyms* nil)
 
 
-(define-symbol-macro @0 0)
-(define-symbol-macro @1 1)
-(define-symbol-macro @2 2)
 (define-symbol-macro _ :_)
 
-(defclass od-char-class (od)
-  ())
+(defun next-constant ()
+  (let ((n (incf *constant-index*)))
+    n))
 
-(defclass od-function-class (od)
-  ())
+;; varod == variable-od
+;; constod == constant od
+;; pointerod == pointer-od
+;; voidod = void od
+;; funcod == function od
+;; bifuncod = built-in function od
 
-(defclass od-void-class (od)
-  ())
+(defun varod (typename space offset)
+  (make-instance 'od-indirect :dtype typename :base space :index offset))
 
-(defun od-char (k b i)
-  (od 'char k b i))
+(defun pointerod (space offset)
+  (make-instance 'od-indirect :dtype "pointer" :base space :index offset))
 
-(defun od-function (k b i signature)
-  (od 'function k b i signature))
+(defun voidod (space offset)
+  (make-instance 'od-direct :dtype "void"))
 
-(defun od-void (k b i)
-  (od 'void k b i))
+(defun constod (typename value)
+  (make-instance 'od-direct :dtype typename :base *constants* :index (next-constant)
+		 :value value))
+
+(defun funcdod (function-name inputs outputs)
+  (make-instance 'od-direct :dtype "function" :base *code* :index function-name :value (list function-name inputs outputs)))
 
 
-;; scripts
-
-(defparameter *script-identity* `(
-  ($g-defsynonym identity (od-function - *code-stack* "identity" (list
-                                                            (list (od-char @1 _ _)) ;; param - c
-                                                            (list (od-char @1 _ _))))) ;; return type - char
-    
-     ($g-pushScope)
-;;char identity (char c) {
-     ($g-defsynonym c (od-char @1 param 1))
-     ($ir-beginFunction identity) 
-;;  return c;
-     ($ir-return c)
-;;}
-     ($g-popScope)
-     ($ir-endFunction identity)
-			 ))
-
-(defparameter *script-main* `(
-;;int main (int argc, char **argv) {
-  ($g-defsynonym main (od-function 0 *code-stack* "main" (list ;; signature
-                                                    (list (od-int @1 _ _)(od-char @2 _ _)) ;; params - argc, argv
-                                                    (list (od-void _ _ _))))) ;; return type - none (void)
-
-    ($g-pushScope)
-      ($g-defsynonym argc (od-int @1 param 1))
-      ($g-defsynonym argv (od-char @2 param 2))
-      ($ir-beginFunction main)
-;;  char x = identity ('x');
-      ($g-defsynonym x (od-char @1 temp 1)) 
-      ($ir-resetArgs) 
-      ($ir-mutate  x (od-char @0 temp "x"))  
-      ($ir-pushArg x)
-      ($ir-defsynonym %%0 (od-char @1 temp 2)) 
-      ($ir-createTemp %%0)
-      ($ir-call identity)
-      ($ir-mutate  %%0 (od-char @1 result 1)) 
-;;  printf ("result = %c\n", x);
-      ($g-defsynonym printf (od-bifunction _ (list (od-char @1 _ _) (od-varargs _ _ _)) (list (od-void _ _ _))))
-      ($ir-resetArgs) 
-      ($ir-defsynonym %%1 (od-char @1 temp 2)) 
-      ($ir-createTemp %%1)
-      ($ir-mutate  %%1 (od-char @0 temp "result = %c\n")) 
-      ($ir-pushArg %%1)
-      ($ir-pushArg x) 
-      ($ir-call printf) 
-      ($ir-mutate  %%1 (od-char @1 result 1)) 
-      ($ir-return (od-void _ _ _)) 
-;;}
-    ($g-popScope) 
-      ($ir-endFunction main)
-			      ))
-  
+(defun bifuncdod (function-name inputs outputs)
+  (make-instance 'od-direct :dtype "built in function" :index function-name :value (list function-name inputs outputs)))
 
 ;; vm  
 
 (defun $g-pushScope ()
-  (push nil *scope-stack*))
+  (push nil *scope*))
 
 (defun $g-popScope ()
-  (pop *scope-stack*))
+  (pop *scope*))
 
 (defun defsynonym (name od)
   ;; put the lval template od into a mapping table at "name"
@@ -117,40 +75,61 @@
 (defun $ir-defsynonym (name od)
   (defsynonym name od))
 
+(defun lookup-synonym (name)
+  (gethash name *synonyms*))
+
 (defun $ir-beginFunction (name)
-  (declare (ignore name))
-  ($-clear-temps)
-  ($-reverse-args))
+  (let ((function-descriptor (lookup-synonym name)))
+    (declare (ignore name))
+    ;; emit label and function prequel ...>> (name function-descriptor)
 
-(defun $ir.endFunction (name)
+    ;; copy/move args to params, in correct order (a3 a2 a1) -> (p1 p2 p3)
+    (let ((p nil))
+      (loop for arg in *args*
+	    do (push arg p))
+      (venter *params*)
+      (loop for param in p
+	    do (push p *params*))
+
+      ($-fresh-temps))))
+
+(defun $ir-endFunction (name)
   (let ((function-descriptor (fetch name)))
-    (let ((n (length (formals function-descriptor))))
-      (loop while (> n 0)
-	    do (progn
-		 (pop *parameters-stack*)
-		 (decf n))))))
+    (declare (ignore function-descriptor))
+    (vexit *parameters*)
+    ($-dispose-temps)))
 
-(defun $ir-return (od)
-  (push (fetch od) *results-stack*))
-
-(defun $ir-resetArgs ()
-  (setf *args-stack* (vstack)))
-
-(defun $ir-pushArg (v)
-  (push v *args-stack*))
-
-(defun $ir-mutate (dest src)
-  (let ((v (fetch src)))
-    (assign dest v)))
-
-(defun $ir-createTemp (od)
-  ;; push {index od} pair onto temps stack
-  (push `(,(index od) ,od) *temps-stack*))
+(defun $ir-return-from-function (od)
+  (push (fetch od) *results*))
 
 (defun $ir-call (od)
   (let ((script (fetch od)))
-    (push *instruction-stack* script)))
+    (push *instructions* script)))
 
+(defun $ir-save-return-value (function-descriptor od)
+  (let ((rettype (return-type function-descriptor)))
+    (save od (varod rettype *results*))))
+  
+(defun $ir-freshargs ()
+  (venter *args*))
+(defun $ir-pushArg (v)
+  (push v *args*))
+(defun $ir-disposeargs ()
+  (vexit *args*))
+
+(defun $ir-createConstant (name od)
+  ;; in this version, createConstant is like defsynonym
+  ;; in an optimizer, createConstant can poke a set of bytes into the *constants* space, and return an od to that place, which becomes a synonym
+  ($g-defsynonym name od))
+
+(defun $ir-freshreturns ()
+  (venter *returns*))
+(defun $ir-disposereturns ()
+  (vexit *returns*))
+
+
+(defun $ir-createTemp (d)
+  (let ((od (value d)))
 
 ;; end vm
 
@@ -159,20 +138,19 @@
     
 
 
-(defun $-clear-temps ()
-  (setf *temps-stack* nil))
-
-(defun $-reverse-args ()
-  (setf *args-stack* (reverse *args-stack*)))
+(defun $-fresh-temps ()
+  (venter temp))
+(defun $-dispose-temps ()
+  (vexit temp))
 
 (defun $-run ()
-  (if (null *instruction-stack*)
+  (if (null *instructions*)
       nil
-    (if (null (first *instruction-stack*))
+    (if (null (first *instructions*))
 	(progn
-	  (pop *instruction-stack*)
+	  (pop *instructions*)
 	  ($-run))
-      (let ((instruction (pop (first *instruction-stack*))))
+      (let ((instruction (pop (first *instructions*))))
 	(funcall instruction)))))
 
 (defmethod formals ((self od))
@@ -183,19 +161,37 @@
 ;;;
 
 (defun reset-all ()
-  (setf *code-stack* (vstack)
-        *scope-stack* (vstack)
-        *temps-stack* (vstack)
-        *args-stack* (vstack)
-        *parameters-stack* (vstack)
-        *results-stack* (vstack)
-        *instruction-stack* nil
-        *synonyms* nil))
+  (setf global (vstack)
+        *code* (vstack)
+        *costants* (vstack)
+        *scope* (vstack)
+        temp (vstack)
+        arg (vstack)
+        parameter (vstack)
+        result (vstack)
+        *instructions* nil
+        *synonyms* nil)
+  (setf *constant-index* -1))
 
   
 ;;;
-(defun irtest ()
+(defun irtest0 ()
   (reset-all)
-  (let ((c (od-char 1 *temps-stack* 0)))
+  (let ((c (od-char 1 *temps* 0)))
     (assign c #\X)
     (format *standard-output* "~a~%" (fetch c))))
+
+(defun irtest1 ()
+  (reset-all)
+  ;; create a character A in the globals area, at index 0
+  (let ((c (varod "char" *globals* 0)))
+    (save c #\A)
+    (format *standard-output* "~a~%" (fetch c))
+    ;; make a pointer to the character A, the pointer is in the globals area, too, at index 1
+    (let ((p (pointerod *globals* 1)))
+      (save p c)
+      (format *standard-output* "*p = ~a~%" (fetch p)))))
+
+
+(defun irtest ()
+  (irtest1))
