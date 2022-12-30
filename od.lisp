@@ -1,6 +1,6 @@
 (declaim (optimize (debug 3) (safety 3) (speed 0)))
 
-(defparameter *synonyms* nil)
+(defparameter *synonyms* (make-instance 'synonym-table))
 
 (defclass od ()
   ((dtype :accessor dtype :initarg :dtype)
@@ -16,7 +16,7 @@
 (defclass od-pointer (od-indirect) ())
 
 (defun lookup (name)
-  (gethash name *synonyms*))
+  (lookup *synonyms* name))
 
 ;;;; toolbox: simplistic implementation of Operand Descriptors as sparse arrays - stacks of indexed values, no mutation, linear search from top
 ;;;;  of stack for first index that matches (multiple values with the same index can appear in the stack, but the most recent value with an

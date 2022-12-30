@@ -41,11 +41,11 @@
 (defun constod (typename value offset)
   (make-instance 'od-direct :dtype typename :base *constants* :index offset :value value))
 
-(defun funcdod (function-name inputs outputs)
+(defun funcod (function-name inputs outputs)
   (make-instance 'od-direct :dtype "function" :base *code* :index function-name :value (list function-name inputs outputs)))
 
 
-(defun bifuncdod (function-name inputs outputs)
+(defun bifuncod (function-name inputs outputs)
   (make-instance 'od-direct :dtype "built in function" :index function-name :value (list function-name inputs outputs)))
 
 ;; vm  
@@ -55,15 +55,6 @@
 
 (defun $g-popScope ()
   (pop *scope*))
-
-(defun defsynonym (name od)
-  ;; put the lval template od into a mapping table at "name"
-  ;; for now, each entry is a stack, with the most recent entry being first and overriding
-  ;;  all other entries in that slot
-  (multiple-value-bind (stack success) (gethash name *synonyms*) (declare (ignore stack))
-     (if success
-	 (push od (gethash name *synonyms*))
-       (setf (gethash name *synonyms*) (list od)))))
 
 (defun $g-defsynonym (name od)
   (defsynonym name od))
@@ -147,7 +138,26 @@
 	  (pop *instructions*)
 	  ($-run))
       (let ((instruction (pop (first *instructions*))))
-	(funcall instruction)))))
+        (let ((opcode (first instruction))
+              (operands (rest instruction)))
+          (case opcode
+            ("$g-pushScope" (apply #'$g-pushScope operands))
+            ("$g-popScope" (apply #'$g-popScope operands))
+            ("$g-defsynonym" (apply #'$g-defsynonym operands))
+            ("$ir-defsynonym" (apply #'$ir-defsynonym operands))
+            ("$ir-beginFunction" (apply #'$ir-beginFunction operands))
+            ("$ir-endFunction" (apply #'$ir-endFunction operands))
+            ("$ir-return-from-function" (apply #'$ir-return-from-function operands))
+            ("$ir-call" (apply #'$ir-call operands))
+            ("$ir-save-return-value" (apply #'$ir-save-return-value operands))
+            ("$ir-freshargs" (apply #'$ir-freshargs operands))
+            ("$ir-pushArg" (apply #'$ir-pushArg operands))
+            ("$ir-disposeargs" (apply #'$ir-disposeargs operands))
+            ("$ir-createConstant" (apply #'$ir-createConstant operands))
+            ("$ir-freshreturns" (apply #'$ir-freshreturns operands))
+            ("$ir-disposereturns" (apply #'$ir-disposereturns operands))
+            ("$ir-createTemp" (apply #'$ir-createTemp operands))
+            (otherwise (assert nil))))))))
 
 (defmethod formals ((self od))
   (assert (eq 'function (dtype self)))
@@ -167,9 +177,8 @@
         arg (vstack)
         parameter (vstack)
         result (vstack)
-        *instructions* nil
-        *synonyms* nil)
-  (setf *constant-index* -1))
+        *instructions* (vstack)
+        *synonyms* (make-instance 'synonym-table)))
 
   
 ;;;
@@ -188,9 +197,34 @@
     ;; make a pointer to the character A, the pointer is in the globals area, too, at index 1
     (let ((p (pointerod *globals* 1)))
       (save p c)
-      (format *standard-output* "*p = ~a~%" (value p)))))
+      (format *standard-output* "*p=~a c=~a~%" (value p) (value c)))))
 
+
+(defun irtest2 ()
+  (reset-all)
+  (let ((c (varod "char*" *globals* 0)))
+    (save c "bcdef")
+    (format *standard-output* "~a~%" (value c))
+    ;; make a pointer to the character A, the pointer is in the globals area, too, at index 1
+    (let ((p (pointerod *globals* 1)))
+      (save p c)
+      (format *standard-output* "*p=~a c=~a~%" (value p) (value c)))))
+
+(defun irtest3 ()
+  (reset-all)
+  (let ((fidentity (funcod
+                    "identity"
+                    (list "char") ;; param - c
+                    (list "char")))) ;; return type - char
+    (format *standard-output* "~a~%" (value fidentity))))
+
+(defun irtest4 ()
+  (reset-all)
+  (vput *code* 0 *script-identity*)
+  (vput *code* 1 *script-main*)
+  (push *script-main* *instructions*)
+  ($-run))
 
 (defun irtest ()
-  (irtest1))
+  (irtest4))
 
