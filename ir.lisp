@@ -1,17 +1,15 @@
 (declaim (optimize (debug 3) (safety 3) (speed 0)))
 
-;; each allocation space is a sparse array - a stack that contains {index value} pairs
-;; access of an item is a linear search for its index beginning at the top of the stack
+;; each allocation space is a sparse array - a stack that contains {key value} pairs
+;; access of an item is a linear search for its key beginning at the top of the stack
 ;; "mutation" doesn't change anything, but simply pushes another pair onto the stack
-;;   that contains the same index, overriding previous values at that index due to the
+;;   that contains the same key, overriding previous values at that key due to the
 ;;   linear search strategy (this can be later optimized to mutate values at given indices)
 
 
 (defparameter *globals* (vstack))
 (defparameter *code* (vstack))
-(defparameter *constant-index* -1)
 (defparameter *constants* (vstack))
-(defparameter *scope* (vstack))
 (defparameter temp (vstack))
 (defparameter arg (vstack))
 (defparameter parameter (vstack))
@@ -19,6 +17,8 @@
 
 (defparameter *instructions* nil)
 ;; *synonyms* defined in od.lisp
+
+(defparameter *scopes* (list temp arg parameter result))
 
 (define-symbol-macro _ :_)
 
@@ -30,31 +30,33 @@
 ;; bifuncod = built-in function od
 
 (defun varod (typename space offset)
-  (make-instance 'od-indirect :dtype typename :base space :index offset))
+  (make-instance 'od-indirect :dtype typename :base space :key offset))
 
 (defun pointerod (space offset)
-  (make-instance 'od-indirect :dtype "pointer" :base space :index offset))
+  (make-instance 'od-indirect :dtype "pointer" :base space :key offset))
 
 (defun voidod ()
   (make-instance 'od-direct :dtype "void"))
 
 (defun constod (typename value offset)
-  (make-instance 'od-direct :dtype typename :base *constants* :index offset :value value))
+  (make-instance 'od-direct :dtype typename :base *constants* :key offset :value value))
 
 (defun funcod (function-name inputs outputs)
-  (make-instance 'od-direct :dtype "function" :base *code* :index function-name :value (list function-name inputs outputs)))
+  (make-instance 'od-direct :dtype "function" :base *code* :key function-name :value (list function-name inputs outputs)))
 
 
 (defun bifuncod (function-name inputs outputs)
-  (make-instance 'od-direct :dtype "built in function" :index function-name :value (list function-name inputs outputs)))
+  (make-instance 'od-direct :dtype "built in function" :key function-name :value (list function-name inputs outputs)))
 
 ;; vm  
 
 (defun $g-pushScope ()
-  (push nil *scope*))
+  (loop for scope in *scopes*
+        do (venter scope)))
 
 (defun $g-popScope ()
-  (pop *scope*))
+  (loop for scope in *scopes*
+        do (vexit scope)))
 
 (defun $g-defsynonym (name od)
   (defsynonym *synonyms* name od))
@@ -64,17 +66,11 @@
 
 (defun $ir-beginFunction (name)
   (let ((function-descriptor (lookup *synonyms* name)))
-    (declare (ignore name function-descriptor))
     ;; emit label and function prequel ...>> (name function-descriptor)
-
-    ;; copy/move args to params, in correct order (a3 a2 a1) -> (p1 p2 p3)
-    (let ((p nil))
-      (loop for a in arg
-	    do (push a p))
+    ;; and, bind args to params, in correct order (a3 a2 a1) -> (p1 p2 p3)
+    (let ((arg-pairs (reverse (top-scope-as-list arg))))
       (venter parameter)
-      (loop for a in p
-	    do (push a parameter))
-
+      (bind-formals function-descriptor arg-pairs)
       ($-fresh-temps))))
 
 (defun $ir-endFunction (name)
@@ -138,26 +134,27 @@
 	  (pop *instructions*)
 	  ($-run))
       (let ((instruction (pop (first *instructions*))))
-        (let ((opcode (string-downcase (first instruction)))
+        (let ((opcode (first instruction))
               (operands (rest instruction)))
-            (cond
-             ((string= "$g-pushScope" opcode) (apply #'$g-pushScope operands))
-             ((string= "$g-popScope" opcode) (apply #'$g-popScope operands))
-             ((string= "$g-defsynonym" opcode) (apply #'$g-defsynonym operands))
-             ((string= "$ir-defsynonym" opcode) (apply #'$ir-defsynonym operands))
-             ((string= "$ir-beginFunction" opcode) (apply #'$ir-beginFunction operands))
-             ((string= "$ir-endFunction" opcode) (apply #'$ir-endFunction operands))
-             ((string= "$ir-return-from-function" opcode) (apply #'$ir-return-from-function operands))
-             ((string= "$ir-call" opcode) (apply #'$ir-call operands))
-             ((string= "$ir-save-return-value" opcode) (apply #'$ir-save-return-value operands))
-             ((string= "$ir-freshargs" opcode) (apply #'$ir-freshargs operands))
-             ((string= "$ir-pushArg" opcode) (apply #'$ir-pushArg operands))
-             ((string= "$ir-disposeargs" opcode) (apply #'$ir-disposeargs operands))
-             ((string= "$ir-createConstant" opcode) (apply #'$ir-createConstant operands))
-             ((string= "$ir-freshreturns" opcode) (apply #'$ir-freshreturns operands))
-             ((string= "$ir-disposereturns" opcode) (apply #'$ir-disposereturns operands))
-             ((string= "$ir-createTemp" opcode) (apply #'$ir-createTemp operands))
-             (t (assert nil))))))))
+          (cond
+             ((string-equal "$g-pushScope" opcode) (apply #'$g-pushScope operands))
+             ((string-equal "$g-popScope" opcode) (apply #'$g-popScope operands))
+             ((string-equal "$g-defsynonym" opcode) (apply #'$g-defsynonym operands))
+             ((string-equal "$ir-defsynonym" opcode) (apply #'$ir-defsynonym operands))
+             ((string-equal "$ir-beginFunction" opcode) (apply #'$ir-beginFunction operands))
+             ((string-equal "$ir-endFunction" opcode) (apply #'$ir-endFunction operands))
+             ((string-equal "$ir-return-from-function" opcode) (apply #'$ir-return-from-function operands))
+             ((string-equal "$ir-call" opcode) (apply #'$ir-call operands))
+             ((string-equal "$ir-save-return-value" opcode) (apply #'$ir-save-return-value operands))
+             ((string-equal "$ir-freshargs" opcode) (apply #'$ir-freshargs operands))
+             ((string-equal "$ir-pushArg" opcode) (apply #'$ir-pushArg operands))
+             ((string-equal "$ir-disposeargs" opcode) (apply #'$ir-disposeargs operands))
+             ((string-equal "$ir-createConstant" opcode) (apply #'$ir-createConstant operands))
+             ((string-equal "$ir-freshreturns" opcode) (apply #'$ir-freshreturns operands))
+             ((string-equal "$ir-disposereturns" opcode) (apply #'$ir-disposereturns operands))
+             ((string-equal "$ir-createTemp" opcode) (apply #'$ir-createTemp operands))
+             (t (assert nil)))
+          ($-run))))))
 
 (defmethod formals ((self od))
   (assert (eq 'function (dtype self)))
@@ -169,7 +166,6 @@
   (setf *globals* (vstack)
         *code* (vstack)
         *constants* (vstack)
-        *scope* (vstack)
         temp (vstack)
         arg (vstack)
         parameter (vstack)
@@ -177,7 +173,22 @@
         *instructions* (vstack)
         *synonyms* (make-instance 'synonym-table)))
 
-  
+(defun lookup-code (name)
+  (vget *code* name))
+
+(defun bind-formals (function-descriptor arg-pairs)
+  (let ((fparams (formals function-descriptor)))
+    (if (not (= (length fparams) (length arg-pairs)))
+        (compiler-error (format nil "wrong number of arguments passed to function ~a (given ~a)" function-descriptor arg-pairs))
+      (mapc #'(lambda (param-pair arg-pair)
+                (let ((name (first param-pair))
+                      (val  (second arg-pair)))
+                  (vput parameter name val)))
+            fparams arg-pairs))))
+
+(defun compiler-error (message)
+  (error message))
+
 ;;;
 (defun irtest0 ()
   (reset-all)
@@ -187,11 +198,11 @@
 
 (defun irtest1 ()
   (reset-all)
-  ;; create a character A in the globals area, at index 0
+  ;; create a character A in the globals area, at key 0
   (let ((c (varod "char" *globals* 0)))
     (save c #\A)
     (format *standard-output* "~a~%" (value c))
-    ;; make a pointer to the character A, the pointer is in the globals area, too, at index 1
+    ;; make a pointer to the character A, the pointer is in the globals area, too, at key 1
     (let ((p (pointerod *globals* 1)))
       (save p c)
       (format *standard-output* "*p=~a c=~a~%" (value p) (value c)))))
@@ -202,7 +213,7 @@
   (let ((c (varod "char*" *globals* 0)))
     (save c "bcdef")
     (format *standard-output* "~a~%" (value c))
-    ;; make a pointer to the character A, the pointer is in the globals area, too, at index 1
+    ;; make a pointer to the character A, the pointer is in the globals area, too, at key 1
     (let ((p (pointerod *globals* 1)))
       (save p c)
       (format *standard-output* "*p=~a c=~a~%" (value p) (value c)))))
@@ -217,11 +228,16 @@
 
 (defun irtest4 ()
   (reset-all)
-  (vput *code* 0 *script-identity*)
-  (vput *code* 1 *script-main*)
+  (vput *code* "identity" *script-identity*)
+  (vput *code* "main" *script-main*)
   (push *script-main* *instructions*)
+  (vput arg "argc" 1)
+  (vput arg "argv" "")
   ($-run))
 
 (defun irtest ()
+  (irtest1)
+  (irtest2)
+  (irtest3)
   (irtest4))
 

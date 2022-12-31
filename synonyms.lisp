@@ -12,7 +12,7 @@
     (declare (ignore stack))
      (if success
 	 (push od (gethash name (table self)))
-       (setf (gethash name (table self)) (list od)))))
+       (setf (gethash name (table self)) od))))
 
 (defmethod lookup ((self synonym-table) name)
-  (gethash (table self) name))
+  (gethash name (table self)))

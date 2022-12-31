@@ -1,3 +1,4 @@
+
 (let ((root "/Users/tarvydas/quicklisp/local-projects/compile/"))
   (labels ((ld (fname)
              (load (format nil "~a~a" root fname))))
