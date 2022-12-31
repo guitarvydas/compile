@@ -38,8 +38,11 @@
 (defun voidod ()
   (make-instance 'od-direct :dtype "void"))
 
-(defun constod (typename value offset)
-  (make-instance 'od-direct :dtype typename :base *constants* :key offset :value value))
+(defun lconstod (typename value offset)
+  ;; a leaf constant contains an atomic value, e.g. number, string, char, boolean, etc.
+  ;; a composite constant is made up of a pointer to something probably in the *constants* base
+  ;; only leaf constants can be od-direct
+  (make-instance 'od-direct :dtype typename :value value))
 
 (defun funcod (function-name inputs outputs)
   (make-instance 'od-direct :dtype "function" :base *code* :key function-name :value (list function-name inputs outputs)))
@@ -98,9 +101,10 @@
 (defun $ir-disposeargs ()
   (vexit arg))
 
-(defun $ir-createConstant (name od)
-  ;; in this version, createConstant is like defsynonym
-  ;; in an optimizer, createConstant can poke a set of bytes into the *constants* space, and return an od to that place, which becomes a synonym
+(defun $ir-defconstant (name ty val)
+  ;; in this version, defconstant is like defsynonym
+  ;; in an optimizer, defconstant can poke a set of bytes into the *constants* space, and return an od to that place, which becomes a synonym
+  (let ((od (varod 
   ($g-defsynonym name od))
 
 (defun $ir-freshreturns ()
@@ -149,7 +153,7 @@
              ((string-equal "$ir-freshargs" opcode) (apply #'$ir-freshargs operands))
              ((string-equal "$ir-pushArg" opcode) (apply #'$ir-pushArg operands))
              ((string-equal "$ir-disposeargs" opcode) (apply #'$ir-disposeargs operands))
-             ((string-equal "$ir-createConstant" opcode) (apply #'$ir-createConstant operands))
+             ((string-equal "$ir-defconstant" opcode) (apply #'$ir-defconstant operands))
              ((string-equal "$ir-freshreturns" opcode) (apply #'$ir-freshreturns operands))
              ((string-equal "$ir-disposereturns" opcode) (apply #'$ir-disposereturns operands))
              ((string-equal "$ir-createTemp" opcode) (apply #'$ir-createTemp operands))
@@ -231,8 +235,8 @@
   (vput *code* "identity" *script-identity*)
   (vput *code* "main" *script-main*)
   (push *script-main* *instructions*)
-  (vput arg "argc" 1)
-  (vput arg "argv" "")
+  (vput arg "argc" (constod "int" 1)
+  (vput arg "argv" ... "")
   ($-run))
 
 (defun irtest ()
