@@ -1,21 +1,5 @@
 (declaim (optimize (debug 3) (safety 3) (speed 0)))
 
-;; each allocation space is a sparse array - a stack that contains {key value} pairs
-;; access of an item is a linear search for its key beginning at the top of the stack
-;; "mutation" doesn't change anything, but simply pushes another pair onto the stack
-;;   that contains the same key, overriding previous values at that key due to the
-;;   linear search strategy (this can be later optimized to mutate values at given indices)
-
-
-(defparameter *globals* (vstack))
-(defparameter *code* (vstack))
-(defparameter *constants* (vstack))
-(defparameter temp (vstack))
-(defparameter arg (vstack))
-(defparameter parameter (vstack))
-(defparameter result (vstack))
-
-(defparameter *constant-index* -1)
 
 (defparameter *instructions* nil)
 ;; *synonyms* defined in od.lisp
@@ -24,37 +8,6 @@
 
 (define-symbol-macro _ :_)
 
-;; varod == variable-od
-;; constod == constant od
-;; pointerod == pointer-od
-;; voidod = void od
-;; funcod == function od
-;; bifuncod = built-in function od
-
-(defun varod (typename space offset)
-  (make-instance 'od-indirect :dtype typename :base space :key offset))
-
-(defun pointerod (space offset)
-  (make-instance 'od-indirect :dtype "pointer" :base space :key offset))
-
-(defun voidod ()
-  (make-instance 'od-direct :dtype "void"))
-
-  ;; a leaf constant contains an atomic value, e.g. number, string, char, boolean, etc.
-  ;; a composite initialized constant is made up of a pointer to something probably in the *constants* base
-  ;; only leaf constants can be od-direct
-(defun manifestconstod (typename value)
-  (make-instance 'od-direct :dtype typename :value value))
-
-(defun initializedod (typename base key value)
-  (make-instance 'od-ininitialized :dtype typename :value value :base base :key key))
-
-(defun funcod (function-name inputs outputs)
-  (make-instance 'od-direct :dtype "function" :base *code* :key function-name :value (list function-name inputs outputs)))
-
-
-(defun bifuncod (function-name inputs outputs)
-  (make-instance 'od-direct :dtype "built in function" :key function-name :value (list function-name inputs outputs)))
 
 ;; vm  
 

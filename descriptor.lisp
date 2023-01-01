@@ -3,20 +3,17 @@
 (defparameter *synonyms* (make-instance 'synonym-table))
 
 (defclass od ()
-  ((dtype :accessor dtype :initarg :dtype))
+  ((dtype :accessor dtype :initarg :dtype)
+   (value :accessor value :initarg :value :initform nil)))
 
 
-(defclass od-direct (od)
-  ((value :accessor value :initarg :value)))
+(defclass dd-direct (od))
 
-(defclass od-indirect (od) ()  ;; dtype = char | number | string | pointer
+(defclass dd-indirect (od) ()  ;; dtype = char | number | string | pointer
   ((base :accessor base :initarg :base)
    (key :accessor key :initarg :key)))
 
-(defclass od-initialized (od-indirect) ()
-  ((value :accessor value :initarg :value)))
-
-(defclass od-pointer (od-indirect) ())
+(defclass dd-pointer (od-indirect) ())
 
 ;;;; toolbox: simplistic implementation of Operand Descriptors as sparse arrays - stacks of indexed values, no mutation, linear search from top
 ;;;;  of stack for first index that matches (multiple values with the same index can appear in the stack, but the most recent value with an
@@ -27,10 +24,10 @@
   (let ((d (lookup *synonyms* self)))
     (value d)))
 
-(defmethod value ((self od-indirect)) ;; char | number | string
+(defmethod value ((self dd-indirect)) ;; char | number | string
   (vget (base self) (key self)))
 
-(defmethod value ((self od-pointer))
+(defmethod value ((self dd-pointer))
   (let ((target (nth (key self) (base self))))
     (value target)))
 
@@ -39,26 +36,27 @@
   (let ((d (lookup *synonyms* self)))
     (save d v)))
 
-(defmethod save ((self od-direct) v)
-  (setf (value self) v))
+(defmethod save ((self dd-direct) v)
+  )
 
-(defmethod save ((self od-indirect) v)
+(defmethod save ((self dd-indirect) v)
   (vput (base self) (key self) v))
 
-(defmethod save ((self od-pointer) v)
+(defmethod save ((self dd-pointer) v)
   (let ((target (nth (key self) (base self))))
     (save target v)))
 
 
-(defmethod function-name ((self od-direct))
+(defmethod function-name ((self od))
   (assert (string= "function" (dtype self)))
   (first (value self)))
-(defmethod function-inputs ((self od-direct))
+(defmethod function-inputs ((self od))
   (assert (string= "function" (dtype self)))
   (second (value self)))
-(defmethod function-outputs ((self od-direct))
+(defmethod function-outputs ((self od))
   (assert (string= "function" (dtype self)))
   (third (value self)))
-(defmethod return-type ((self od-direct))
+(defmethod return-type ((self od))
+  (assert (string= "function" (dtype self)))
   (let ((outs (function-outputs self)))
     (first outs)))
