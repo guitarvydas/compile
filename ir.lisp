@@ -15,6 +15,8 @@
 (defparameter parameter (vstack))
 (defparameter result (vstack))
 
+(defparameter *constant-index* -1)
+
 (defparameter *instructions* nil)
 ;; *synonyms* defined in od.lisp
 
@@ -38,11 +40,14 @@
 (defun voidod ()
   (make-instance 'od-direct :dtype "void"))
 
-(defun lconstod (typename value offset)
   ;; a leaf constant contains an atomic value, e.g. number, string, char, boolean, etc.
-  ;; a composite constant is made up of a pointer to something probably in the *constants* base
+  ;; a composite initialized constant is made up of a pointer to something probably in the *constants* base
   ;; only leaf constants can be od-direct
+(defun manifestconstod (typename value)
   (make-instance 'od-direct :dtype typename :value value))
+
+(defun initializedod (typename base key value)
+  (make-instance 'od-ininitialized :dtype typename :value value :base base :key key))
 
 (defun funcod (function-name inputs outputs)
   (make-instance 'od-direct :dtype "function" :base *code* :key function-name :value (list function-name inputs outputs)))
@@ -101,11 +106,23 @@
 (defun $ir-disposeargs ()
   (vexit arg))
 
-(defun $ir-defconstant (name ty val)
-  ;; in this version, defconstant is like defsynonym
-  ;; in an optimizer, defconstant can poke a set of bytes into the *constants* space, and return an od to that place, which becomes a synonym
-  (let ((od (varod 
-  ($g-defsynonym name od))
+(defun next-constant ()
+  (incf *constant-index*))
+
+       ($ir-defsynonym %%0 ,(manifestconstantod "char" "x"))
+       ($ir-initialize %%0)
+...       ($ir-defsynonym %%2 ,(initializedod "string" *globals* 0 "result = %c\n"))
+       ($ir-initialize %%2)
+
+(defun $ir-initialize (name)
+  ;; initialize a constant in memory at compile-time, if necessary
+  ;; the Allocator has decided which constants are manifest for this given CPU architecture, and,
+  ;; which are non-manifest, e.g. 5 is manifest, whereas "abcdef" is not manifest and needs
+  ;; to be put somewhere in memory (resp: manifest=fits in a CPU register, non-manifest=does not fit in a register and needs to be put in memory)
+  ;; this early version of the POC code does nothing and assumes that everything will be interpreted
+  (let ((od (lookup *synonyms*) name))
+    ;; this is where you could do something with the :value of the initialized variable
+    ))
 
 (defun $ir-freshreturns ()
   (venter result))
@@ -175,7 +192,9 @@
         parameter (vstack)
         result (vstack)
         *instructions* (vstack)
-        *synonyms* (make-instance 'synonym-table)))
+        *synonyms* (make-instance 'synonym-table)
+	*constant-index* -1
+))
 
 (defun lookup-code (name)
   (vget *code* name))
@@ -235,8 +254,8 @@
   (vput *code* "identity" *script-identity*)
   (vput *code* "main" *script-main*)
   (push *script-main* *instructions*)
-  (vput arg "argc" (constod "int" 1)
-  (vput arg "argv" ... "")
+  ($ir-defconstant %c0 "int" 1)
+  ($ir-defconstant %c1 "char**" "")
   ($-run))
 
 (defun irtest ()

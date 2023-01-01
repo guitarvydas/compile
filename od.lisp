@@ -3,15 +3,18 @@
 (defparameter *synonyms* (make-instance 'synonym-table))
 
 (defclass od ()
-  ((dtype :accessor dtype :initarg :dtype)
-   (base :accessor base :initarg :base)
-   (key :accessor key :initarg :key)))
+  ((dtype :accessor dtype :initarg :dtype))
 
 
 (defclass od-direct (od)
   ((value :accessor value :initarg :value)))
 
-(defclass od-indirect (od) ())  ;; dtype = char | number | string | pointer
+(defclass od-indirect (od) ()  ;; dtype = char | number | string | pointer
+  ((base :accessor base :initarg :base)
+   (key :accessor key :initarg :key)))
+
+(defclass od-initialized (od-indirect) ()
+  ((value :accessor value :initarg :value)))
 
 (defclass od-pointer (od-indirect) ())
 
