@@ -46,6 +46,9 @@
 (defmethod value ((self dd-indirect)) ;; char | number | string | addres
   (vget (base self) (key self)))
 
+(defmethod value ((self info-operand-descriptor))
+ (info self))
+
 (defmethod save ((self symbol) v)
   ;; recursively unwind symbol to extract its underlying data descriptor
   (let ((d (lookup *synonyms* self)))
@@ -58,20 +61,18 @@
   (vput (base self) (key self) v))
 
 
-(defmethod function-name ((self operand-descriptor))
+(defmethod function-name ((self info-operand-descriptor))
   (assert (string= "function" (dtype self)))
-  (first (value self)))
-(defmethod function-inputs ((self operand-descriptor))
+  (first (info self)))
+(defmethod function-inputs ((self info-operand-descriptor))
   (assert (string= "function" (dtype self)))
-  (second (value self)))
-(defmethod function-outputs ((self operand-descriptor))
+  (second (info self)))
+(defmethod function-outputs ((self info-operand-descriptor))
   (assert (string= "function" (dtype self)))
-  (third (value self)))
-(defmethod return-type ((self operand-descriptor))
+  (third (info self)))
+(defmethod return-type ((self info-operand-descriptor))
   (assert (string= "function" (dtype self)))
   (let ((outs (function-outputs self)))
     (first outs)))
-(defmethod formals ((self operand-descriptor))
-  (assert (string= "function" (dtype self)))
-  (second self))
-
+(defmethod formals ((self info-operand-descriptor))
+  (function-inputs self))

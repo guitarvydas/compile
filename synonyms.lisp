@@ -16,3 +16,5 @@
 
 (defmethod lookup ((self synonym-table) name)
   (gethash name (table self)))
+
+    

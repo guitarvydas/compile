@@ -46,8 +46,8 @@
 (defun $ir-return-from-function (od)
   (push (value od) result))
 
-(defun $ir-call (od)
-  (let ((function-descriptor (value od)))
+(defun $ir-call (name)
+  (let ((function-descriptor (value (lookup name))))
     (let ((script (lookup-code (function-name function-descriptor))))
       (push *instructions* script))))
 
@@ -58,7 +58,8 @@
 (defun $ir-freshargs ()
   (venter arg))
 (defun $ir-pushArg (v)
-  (push v arg))
+  (let ((d (lookup *synonyms* v)))
+    (vpush arg d)))
 (defun $ir-disposeargs ()
   (vexit arg))
 
@@ -78,8 +79,8 @@
   (vexit result))
 
 
-(defun $ir-createTemp (d)
-  (let ((dd (value d)))
+(defun $ir-createTemp (name)
+  (let ((dd (lookup *synonyms* name)))
     ;; no-op in this (non-optimized) version
     (declare (ignore dd))))
 
@@ -105,10 +106,12 @@
       (let ((instruction (pop (first *instructions*))))
         (let ((opcode (first instruction))
               (operands (rest instruction)))
+          (format *standard-output* "~a~%" opcode)
           (cond
              ((string-equal "$g-pushScope" opcode) (apply #'$g-pushScope operands))
              ((string-equal "$g-popScope" opcode) (apply #'$g-popScope operands))
              ((string-equal "$g-defsynonym" opcode) (apply #'$g-defsynonym operands))
+             ((string-equal "$a-defsynonym" opcode) (apply #'$a-defsynonym operands))
              ((string-equal "$ir-defsynonym" opcode) (apply #'$ir-defsynonym operands))
              ((string-equal "$ir-beginFunction" opcode) (apply #'$ir-beginFunction operands))
              ((string-equal "$ir-endFunction" opcode) (apply #'$ir-endFunction operands))
@@ -137,18 +140,17 @@
         result (vstack)
         *instructions* (vstack)
         *synonyms* (make-instance 'synonym-table)
-	*constant-index* -1
 ))
 
 (defun lookup-code (name)
-  (vget *code* name))
+  (gethash name *code*))
 
 (defun bind-formals (function-descriptor arg-pairs)
   (let ((fparams (formals function-descriptor)))
     (if (not (= (length fparams) (length arg-pairs)))
         (compiler-error (format nil "wrong number of arguments passed to function ~a (given ~a)" function-descriptor arg-pairs))
-      (mapc #'(lambda (param-pair arg-pair)
-                (let ((name (first param-pair))
+      (mapc #'(lambda (param arg-pair)
+                (let ((name param)
                       (val  (second arg-pair)))
                   (vput parameter name val)))
             fparams arg-pairs))))

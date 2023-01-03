@@ -7,7 +7,7 @@
    (scope-stack :accessor scope-stack :initform nil)))
 
 (defmethod venter ((self vstack))
-  (push (scope-stack self) (stack self)))
+  (push (stack self) (scope-stack self)))
 
 (defmethod vexit ((self vstack))
   (setf (stack self) (pop (scope-stack self))))
@@ -15,6 +15,9 @@
 
 (defmethod vput ((self vstack) key v)
   (push (list key v) (stack self)))
+
+(defmethod vpush ((self vstack) desc)
+  (push (list '? desc) (stack self)))
 
 (defmethod vget ((self vstack) key)
   (labels ((top-down-search (stack key)
