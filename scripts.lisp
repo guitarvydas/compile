@@ -3,14 +3,14 @@
 ;; scripts
 
 (defparameter *script-identity* `(
-  ($g-defsynonym identity ,(funcod
+  ($g-defsynonym identity ,($g-func
 			     "identity"
 			     (list "char") ;; param - c
 			     (list "char"))) ;; return type - char
     
      ($g-pushScope)
 ;;char identity (char c) {
-     ($g-defsynonym c ,(vardd "char" parameter 1))
+     ($a-defsynonym c ,($a-var "char" parameter 1))
      ($ir-beginFunction identity) 
 ;;  return c;
      ($ir-return-from-function c)
@@ -45,9 +45,9 @@
 ;;  printf ("result = %c\n", x);
       ($g-defsynonym printf ,($g-bifunc "printf" (list "string" "varargs") (list "void")))
       ($ir-freshargs)
-       ($ir-defsynonym %%1 ,($a-var "char" temp 1))
+       ($a-defsynonym %%1 ,($a-var "char" temp 1))
        ($ir-createTemp %%1)
-       ($ir-defsynonym %%2 ,($a-initialized "string" *globals* 0 "result = %c\n"))
+       ($a-defsynonym %%2 ,($a-initialized "string" *globals* 0 "result = %c\n"))
        ($ir-initialize %%2)
        ($ir-pushArg %%2)
        ($ir-pushArg x) 

@@ -15,4 +15,8 @@
 	  (ld "ir.lisp")
 
 	  ;; scripts
-	  (ld "scripts.lisp")))
+	  (ld "scripts.lisp")
+
+          ;; tests
+          (ld "tests.lisp")
+))

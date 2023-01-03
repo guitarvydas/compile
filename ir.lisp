@@ -8,6 +8,9 @@
 
 (define-symbol-macro _ :_)
 
+(defun $ir-var (typename space offset)
+  ($a-var typename space offset))
+
 
 ;; vm  
 
@@ -50,7 +53,7 @@
 
 (defun $ir-save-return-value (function-descriptor od)
   (let ((rettype (return-type function-descriptor)))
-    (save od (varod rettype result 0))))
+    (save od ($ir-var rettype result 0))))
   
 (defun $ir-freshargs ()
   (venter arg))
@@ -59,21 +62,13 @@
 (defun $ir-disposeargs ()
   (vexit arg))
 
-(defun next-constant ()
-  (incf *constant-index*))
-
-       ($ir-defsynonym %%0 ,(manifestconstantod "char" "x"))
-       ($ir-initialize %%0)
-...       ($ir-defsynonym %%2 ,(initializedod "string" *globals* 0 "result = %c\n"))
-       ($ir-initialize %%2)
-
 (defun $ir-initialize (name)
   ;; initialize a constant in memory at compile-time, if necessary
   ;; the Allocator has decided which constants are manifest for this given CPU architecture, and,
   ;; which are non-manifest, e.g. 5 is manifest, whereas "abcdef" is not manifest and needs
   ;; to be put somewhere in memory (resp: manifest=fits in a CPU register, non-manifest=does not fit in a register and needs to be put in memory)
   ;; this early version of the POC code does nothing and assumes that everything will be interpreted
-  (let ((od (lookup *synonyms*) name))
+  (let ((dd (lookup *synonyms* name)))
     ;; this is where you could do something with the :value of the initialized variable
     ))
 
@@ -84,9 +79,9 @@
 
 
 (defun $ir-createTemp (d)
-  (let ((od (value d)))
+  (let ((dd (value d)))
     ;; no-op in this (non-optimized) version
-    (declare (ignore od))))
+    (declare (ignore dd))))
 
 ;; end vm
 
@@ -123,16 +118,12 @@
              ((string-equal "$ir-freshargs" opcode) (apply #'$ir-freshargs operands))
              ((string-equal "$ir-pushArg" opcode) (apply #'$ir-pushArg operands))
              ((string-equal "$ir-disposeargs" opcode) (apply #'$ir-disposeargs operands))
-             ((string-equal "$ir-defconstant" opcode) (apply #'$ir-defconstant operands))
+             ((string-equal "$ir-initialize" opcode) (apply #'$ir-initialize operands))
              ((string-equal "$ir-freshreturns" opcode) (apply #'$ir-freshreturns operands))
              ((string-equal "$ir-disposereturns" opcode) (apply #'$ir-disposereturns operands))
              ((string-equal "$ir-createTemp" opcode) (apply #'$ir-createTemp operands))
              (t (assert nil)))
           ($-run))))))
-
-(defmethod formals ((self od))
-  (assert (eq 'function (dtype self)))
-    (second self))
 
 ;;;
 
@@ -164,56 +155,4 @@
 
 (defun compiler-error (message)
   (error message))
-
-;;;
-(defun irtest0 ()
-  (reset-all)
-  (let ((c (varod "char" temp 0)))
-    (save c #\X)
-    (format *standard-output* "~a~%" (value c))))
-
-(defun irtest1 ()
-  (reset-all)
-  ;; create a character A in the globals area, at key 0
-  (let ((c (varod "char" *globals* 0)))
-    (save c #\A)
-    (format *standard-output* "~a~%" (value c))
-    ;; make a pointer to the character A, the pointer is in the globals area, too, at key 1
-    (let ((p (pointerod *globals* 1)))
-      (save p c)
-      (format *standard-output* "*p=~a c=~a~%" (value p) (value c)))))
-
-
-(defun irtest2 ()
-  (reset-all)
-  (let ((c (varod "char*" *globals* 0)))
-    (save c "bcdef")
-    (format *standard-output* "~a~%" (value c))
-    ;; make a pointer to the character A, the pointer is in the globals area, too, at key 1
-    (let ((p (pointerod *globals* 1)))
-      (save p c)
-      (format *standard-output* "*p=~a c=~a~%" (value p) (value c)))))
-
-(defun irtest3 ()
-  (reset-all)
-  (let ((fidentity (funcod
-                    "identity"
-                    (list "char") ;; param - c
-                    (list "char")))) ;; return type - char
-    (format *standard-output* "~a~%" (value fidentity))))
-
-(defun irtest4 ()
-  (reset-all)
-  (vput *code* "identity" *script-identity*)
-  (vput *code* "main" *script-main*)
-  (push *script-main* *instructions*)
-  ($ir-defconstant %c0 "int" 1)
-  ($ir-defconstant %c1 "char**" "")
-  ($-run))
-
-(defun irtest ()
-  (irtest1)
-  (irtest2)
-  (irtest3)
-  (irtest4))
 
