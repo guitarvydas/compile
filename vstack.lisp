@@ -1,7 +1,9 @@
 (declaim (optimize (debug 3) (safety 3) (speed 0)))
 
-;;; stacks of keyed values 
-;;;   pairs {key value}
+;; scoped table of values
+;; {key, value} pairs are placed in the topmost scope 
+;; typical lookup = find key searching downwards through all scopes, return first value found
+
 (defclass vstack ()
   ((stack :accessor stack :initform nil)
    (scope-stack :accessor scope-stack :initform nil)))

@@ -2,7 +2,7 @@
 
 
 (defparameter *instructions* nil)
-;; *synonyms* defined in od.lisp
+;; *synonyms* defined in descriptor.lisp
 
 (defparameter *scopes* (list temp arg parameter result))
 
@@ -47,7 +47,7 @@
   (push (value od) result))
 
 (defun $ir-call (name)
-  (let ((function-descriptor (value (lookup name))))
+  (let ((function-descriptor (lookup-synonym name)))
     (let ((script (lookup-code (function-name function-descriptor))))
       (push *instructions* script))))
 
@@ -158,3 +158,5 @@
 (defun compiler-error (message)
   (error message))
 
+(defun lookup-synonym (name)
+  (lookup *synonyms* name))

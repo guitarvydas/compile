@@ -4,6 +4,17 @@
 
 (defun irtest4 ()
   (reset-all)
+  ($g-pushScope)
+  ($g-defsynonym 'identity ($g-func
+			     "identity"
+			     (list "char") ;; param - c
+			     (list "char"))) ;; return type - char
+    
+  ($g-defsynonym 'main ($g-func
+                         "main"
+                         (list "int" "char**") ;; params - argc, argv
+                         (list "void"))) ;; return type - none (void)
+
   (vput *code* "identity" *script-identity*)
   (vput *code* "main" *script-main*)
   (push *script-main* *instructions*)
