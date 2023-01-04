@@ -1,7 +1,5 @@
 (declaim (optimize (debug 3) (safety 3) (speed 0)))
 
-(defparameter *synonyms* (make-instance 'synonym-table))
-
 (defclass operand-descriptor ()
   ((dtype :accessor dtype :initarg :dtype)))
 
@@ -44,7 +42,7 @@
     (value d)))
 
 (defmethod value ((self dd-indirect)) ;; char | number | string | addres
-  (vget (base self) (key self)))
+  (stget (base self) (key self)))
 
 (defmethod value ((self info-operand-descriptor))
  (info self))
@@ -58,7 +56,7 @@
   )
 
 (defmethod save ((self dd-indirect) v)
-  (vput (base self) (key self) v))
+  (stput (base self) (key self) v))
 
 
 (defmethod function-name ((self info-operand-descriptor))
@@ -76,3 +74,18 @@
     (first outs)))
 (defmethod formals ((self info-operand-descriptor))
   (function-inputs self))
+(defun formal-name (pair) (first pair))
+(defun formal-type (pair) (second pair))
+(defmethod builtinp ((self info-operand-descriptor))
+  (assert (string= "function" (dtype self)))
+  (let ((signature (info self)))
+    (and (<= (length signature) 4)
+         (eq 'builtin (fourth signature)))))
+(defmethod function-symbol ((self info-operand-descriptor))
+  (let ((fname (function-name self)))
+    (if (stringp fname)
+        (intern (string-upcase fname))
+      (if (symbolp fname)
+          fname
+        (error (format nil "wanted function-symbol that is a string or a symbol, but got ~a for ~a"
+                       (type-of fname) fname))))))

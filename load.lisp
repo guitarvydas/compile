@@ -3,7 +3,7 @@
   (labels ((ld (fname)
              (load (format nil "~a~a" root fname))))
 	  ;; basics
-	  (ld "vstack.lisp")
+	  (ld "scoped-table.lisp")
 	  (ld "synonyms.lisp")
 	  (ld "bases.lisp")
 	  (ld "descriptor.lisp")

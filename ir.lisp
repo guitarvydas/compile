@@ -4,7 +4,6 @@
 (defparameter *instructions* nil)
 ;; *synonyms* defined in descriptor.lisp
 
-(defparameter *scopes* (list temp arg parameter result))
 
 (define-symbol-macro _ :_)
 
@@ -15,53 +14,63 @@
 ;; vm  
 
 (defun $g-pushScope ()
-  (loop for scope in *scopes*
-        do (venter scope)))
+  (stenter *synonyms*))
 
 (defun $g-popScope ()
-  (loop for scope in *scopes*
-        do (vexit scope)))
+  (stexit *synonyms*))
 
 (defun $g-defsynonym (name od)
-  (defsynonym *synonyms* name od))
+  (format *standard-output* " ~a" name)
+  (stput *synonyms* name od))
 
 (defun $ir-defsynonym (name od)
-  (defsynonym *synonyms* name od))
+  (format *standard-output* " ~a" name)
+  (stput *synonyms* name od))
+
+(defun $ir-pushParameterScope ()
+  (stenter parameter))
+
+(defun $ir-popParameterScope ()
+  (stexit parameter))
 
 (defun $ir-beginFunction (name)
   (let ((function-descriptor (lookup *synonyms* name)))
     ;; emit label and function prequel ...>> (name function-descriptor)
     ;; and, bind args to params, in correct order (a3 a2 a1) -> (p1 p2 p3)
-    (let ((arg-pairs (reverse (top-scope-as-list arg))))
-      (venter parameter)
+    (let ((arg-pairs (reverse (sttop-scope-as-list arg))))
+      (stenter *parameter*)
       (bind-formals function-descriptor arg-pairs)
       ($-fresh-temps))))
 
 (defun $ir-endFunction (name)
   (let ((function-descriptor (value name)))
     (declare (ignore function-descriptor))
-    (vexit parameter)
+    (stexit *parameter*)
     ($-dispose-temps)))
 
 (defun $ir-return-from-function (od)
-  (push (value od) result))
+  (stpush *result* (value od)))
 
 (defun $ir-call (name)
+  (format *standard-output* " ~a" name)
   (let ((function-descriptor (lookup-synonym name)))
-    (let ((script (lookup-code (function-name function-descriptor))))
-      (push *instructions* script))))
+    (if (builtinp function-descriptor)
+        ($ir-call-builtin function-descriptor)
+      (let ((script (lookup-code (function-name function-descriptor))))
+        (push script *instructions*)))))
 
-(defun $ir-save-return-value (function-descriptor od)
-  (let ((rettype (return-type function-descriptor)))
-    (save od ($ir-var rettype result 0))))
+(defun $ir-save-return-value (function-name od)
+  (let ((function-descriptor (lookup-synonym function-name)))
+    (let ((rettype (return-type function-descriptor)))
+      (save od ($ir-var rettype result 0)))))
   
 (defun $ir-freshargs ()
-  (venter arg))
+  (stenter *arg*))
 (defun $ir-pushArg (v)
   (let ((d (lookup *synonyms* v)))
-    (vpush arg d)))
+    (stpush *arg* d)))
 (defun $ir-disposeargs ()
-  (vexit arg))
+  (stexit *arg*))
 
 (defun $ir-initialize (name)
   ;; initialize a constant in memory at compile-time, if necessary
@@ -74,9 +83,9 @@
     ))
 
 (defun $ir-freshreturns ()
-  (venter result))
+  (stenter *result*))
 (defun $ir-disposereturns ()
-  (vexit result))
+  (stexit *result*))
 
 
 (defun $ir-createTemp (name)
@@ -84,17 +93,28 @@
     ;; no-op in this (non-optimized) version
     (declare (ignore dd))))
 
+(defun $ir-call-builtin (function-descriptor)
+  (let ((arg-list (reverse (sttop-scope-as-list arg))))
+    (let ((result (apply (function-symbol function-descriptor) arg-list)))
+      ($ir-return-from-function result))))
+  
 ;; end vm
 
-
+;; support code - builtin functions
+;; each function must return its result as a valid data descriptor, or else!
+(defun printf (&rest args)
+  (let ((format-string (value (first args)))
+        (var-args (mapcar #'value (rest args))))
+    (apply 'format format-string var-args)
+    ($g-void))) ;; return void
 
     
 
 
 (defun $-fresh-temps ()
-  (venter temp))
+  (stenter *temp*))
 (defun $-dispose-temps ()
-  (vexit temp))
+  (stexit *temp*))
 
 (defun $-run ()
   (if (null *instructions*)
@@ -106,10 +126,12 @@
       (let ((instruction (pop (first *instructions*))))
         (let ((opcode (first instruction))
               (operands (rest instruction)))
-          (format *standard-output* "~a~%" opcode)
+          (format *standard-output* "~a" opcode)
           (cond
              ((string-equal "$g-pushScope" opcode) (apply #'$g-pushScope operands))
+             ((string-equal "$ir-pushParameterScope" opcode) (apply #'$ir-pushParameterScope operands))
              ((string-equal "$g-popScope" opcode) (apply #'$g-popScope operands))
+             ((string-equal "$ir-popParameterScope" opcode) (apply #'$ir-popParameterScope operands))
              ((string-equal "$g-defsynonym" opcode) (apply #'$g-defsynonym operands))
              ((string-equal "$a-defsynonym" opcode) (apply #'$a-defsynonym operands))
              ((string-equal "$ir-defsynonym" opcode) (apply #'$ir-defsynonym operands))
@@ -126,34 +148,26 @@
              ((string-equal "$ir-disposereturns" opcode) (apply #'$ir-disposereturns operands))
              ((string-equal "$ir-createTemp" opcode) (apply #'$ir-createTemp operands))
              (t (assert nil)))
+          (format *standard-output* "~%")
           ($-run))))))
 
 ;;;
 
-(defun reset-all ()
-  (setf *globals* (vstack)
-        *code* (vstack)
-        *constants* (vstack)
-        temp (vstack)
-        arg (vstack)
-        parameter (vstack)
-        result (vstack)
-        *instructions* (vstack)
-        *synonyms* (make-instance 'synonym-table)
-))
 
 (defun lookup-code (name)
-  (gethash name *code*))
+  (stget *code* name))
 
-(defun bind-formals (function-descriptor arg-pairs)
+(defun bind-formals (function-descriptor args)
   (let ((fparams (formals function-descriptor)))
-    (if (not (= (length fparams) (length arg-pairs)))
-        (compiler-error (format nil "wrong number of arguments passed to function ~a (given ~a)" function-descriptor arg-pairs))
-      (mapc #'(lambda (param arg-pair)
-                (let ((name param)
-                      (val  (second arg-pair)))
-                  (vput parameter name val)))
-            fparams arg-pairs))))
+    (if (not (= (length fparams) (length args)))
+        (compiler-error (format nil "wrong number of arguments passed to function ~a (given ~a)" function-descriptor args))
+      (mapc #'(lambda (param-pair arg)
+                (let ((name (formal-name param-pair))
+                      (ty (formal-type param-pair))
+                      (val arg))
+                  (declare (ignore ty)) ;; not used in this POC
+                  (stput parameter name val)))
+            fparams args))))
 
 (defun compiler-error (message)
   (error message))

@@ -7,21 +7,25 @@
   ($g-pushScope)
   ($g-defsynonym 'identity ($g-func
 			     "identity"
-			     (list "char") ;; param - c
+			     (list (list "c" "char")) ;; param - c
 			     (list "char"))) ;; return type - char
     
   ($g-defsynonym 'main ($g-func
                          "main"
-                         (list "int" "char**") ;; params - argc, argv
+                         (list (list "argc" "int") (list "argv" "char**")) ;; params - argc, argv
                          (list "void"))) ;; return type - none (void)
 
-  (vput *code* "identity" *script-identity*)
-  (vput *code* "main" *script-main*)
+  (stput *code* "identity" *script-identity*)
+  (stput *code* "main" *script-main*)
+  
+  ($g-defsynonym 'printf ($g-bifunc "printf" (list "string" "varargs") (list "void")))
+
   (push *script-main* *instructions*)
   ($a-defsynonym '%argc ($a-manifestconstant "int" 1))
   ($ir-pusharg '%argc)
   ($a-defsynonym '%argv ($a-initialized "char**" *globals* 0 ""))
   ($ir-pusharg '%argv)
+  (format *standard-output* "~%$-run...~%")
   ($-run))
 
 (defun irtest ()

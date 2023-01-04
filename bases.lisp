@@ -7,10 +7,27 @@
 ;;   linear search strategy (this can be later optimized to mutate values at given indices)
 
 
-(defparameter *globals* (vstack))
-(defparameter *code* (vstack))
-(defparameter *constants* (vstack))
-(defparameter temp (vstack))
-(defparameter arg (vstack))
-(defparameter parameter (vstack))
-(defparameter result (vstack))
+(defparameter *globals* nil)
+(defparameter *code* nil)
+(defparameter *synonyms* nil)
+(defparameter *constants* nil)
+(defparameter *temp* nil)
+(defparameter *arg* nil)
+(defparameter *parameter* nil)
+(defparameter *result* nil)
+
+(defparameter *scopes* nil)
+
+(defun reset-all ()
+  (setf *globals* (scoped-table "globals")
+        *code* (scoped-table "code")
+        *constants* (scoped-table "constants")
+        *temp* (scoped-table "temp")
+        *arg* (scoped-table "arg")
+        *parameter* (scoped-table "parameter")
+        *result* (scoped-table "result")
+        *synonyms* (scoped-table "synonyms")
+
+        *instructions* nil
+        *scopes* (list *globals* *code* *constants* *synonyms* *temp* *arg* *parameter* *result*)
+))

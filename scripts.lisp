@@ -5,16 +5,18 @@
 (defparameter *script-identity* `(
   ($g-defsynonym identity ,($g-func
 			     "identity"
-			     (list "char") ;; param - c
+			     (list (list "c" "char")) ;; param - c
 			     (list "char"))) ;; return type - char
     
      ($g-pushScope)
 ;;char identity (char c) {
-     ($a-defsynonym c ,($a-var "char" parameter 1))
+     ($ir-pushParameterScope)
      ($ir-beginFunction identity) 
+     ($a-defsynonym c ,($a-var "char" *parameter* "c"))
 ;;  return c;
      ($ir-return-from-function c)
 ;;}
+     ($ir-popParameterScope)
      ($g-popScope)
      ($ir-endFunction identity)
      ))
@@ -23,15 +25,16 @@
 ;; int main (int argc, char **argv) {
   ($g-defsynonym main ,($g-func
                          "main"
-                         (list "int" "char**") ;; params - argc, argv
+                         (list (list "argc" "int") (list "argv" "char**")) ;; params - argc, argv
                          (list "void"))) ;; return type - none (void)
 
     ($g-pushScope)
-      ($g-defsynonym argc ,($a-var "int" parameter 0))
-      ($g-defsynonym argv ,($a-pointer "char**" parameter 1))
+      ($ir-pushParameterScope)
       ($ir-beginFunction main)
+      ($g-defsynonym argc ,($a-var "int" *parameter* "argc"))
+      ($g-defsynonym argv ,($a-pointer "char**" *parameter* "argv"))
 ;;  char x = identity ('x');
-      ($a-defsynonym x ,($a-var "char" temp 0))
+      ($a-defsynonym x ,($a-var "char" *temp* "x"))
       ($ir-createTemp x)
       ($ir-freshargs)
        ($ir-defsynonym %%0 ,($a-manifestconstant "char" "x"))
@@ -45,9 +48,9 @@
 ;;  printf ("result = %c\n", x);
       ($g-defsynonym printf ,($g-bifunc "printf" (list "string" "varargs") (list "void")))
       ($ir-freshargs)
-       ($a-defsynonym %%1 ,($a-var "char" temp 1))
+       ($a-defsynonym %%1 ,($a-var "char" *temp* 1))
        ($ir-createTemp %%1)
-       ($a-defsynonym %%2 ,($a-initialized "string" *globals* 0 "result = %c\n"))
+       ($a-defsynonym %%2 ,($a-initialized "string" *globals* "%%2" "result = %c\n"))
        ($ir-initialize %%2)
        ($ir-pushArg %%2)
        ($ir-pushArg x) 
@@ -58,6 +61,7 @@
       ($ir-disposeargs)
       ($ir-return-from-function ,($g-void))
 ;;}
+     ($ir-popParameterScope)
     ($g-popScope) 
       ($ir-endFunction main)
       ))
