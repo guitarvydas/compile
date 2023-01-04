@@ -28,16 +28,16 @@
   (stput *synonyms* name od))
 
 (defun $ir-pushParameterScope ()
-  (stenter parameter))
+  (stenter *parameter*))
 
 (defun $ir-popParameterScope ()
-  (stexit parameter))
+  (stexit *parameter*))
 
 (defun $ir-beginFunction (name)
   (let ((function-descriptor (lookup *synonyms* name)))
     ;; emit label and function prequel ...>> (name function-descriptor)
     ;; and, bind args to params, in correct order (a3 a2 a1) -> (p1 p2 p3)
-    (let ((arg-pairs (reverse (sttop-scope-as-list arg))))
+    (let ((arg-pairs (reverse (sttop-scope-as-list *arg*))))
       (stenter *parameter*)
       (bind-formals function-descriptor arg-pairs)
       ($-fresh-temps))))
@@ -62,7 +62,7 @@
 (defun $ir-save-return-value (function-name od)
   (let ((function-descriptor (lookup-synonym function-name)))
     (let ((rettype (return-type function-descriptor)))
-      (save od ($ir-var rettype result 0)))))
+      (save od ($ir-var rettype *result* 0)))))
   
 (defun $ir-freshargs ()
   (stenter *arg*))
@@ -94,7 +94,7 @@
     (declare (ignore dd))))
 
 (defun $ir-call-builtin (function-descriptor)
-  (let ((arg-list (reverse (sttop-scope-as-list arg))))
+  (let ((arg-list (reverse (sttop-scope-as-list *arg*))))
     (let ((result (apply (function-symbol function-descriptor) arg-list)))
       ($ir-return-from-function result))))
   
@@ -166,7 +166,7 @@
                       (ty (formal-type param-pair))
                       (val arg))
                   (declare (ignore ty)) ;; not used in this POC
-                  (stput parameter name val)))
+                  (stput *parameter* name val)))
             fparams args))))
 
 (defun compiler-error (message)

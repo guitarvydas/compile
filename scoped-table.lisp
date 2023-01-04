@@ -9,6 +9,10 @@
    (stack :accessor stack :initform nil)
    (scope-stack :accessor scope-stack :initform nil)))
 
+(defmethod reset ((self scoped-table))
+  (setf (stack self) nil)
+  (setf (scope-stack self) nil))
+
 (defmethod stenter ((self scoped-table))
   (push (stack self) (scope-stack self)))
 
@@ -18,10 +22,10 @@
   
 
 (defmethod stput ((self scoped-table) key v)
-  (push (list key v) (stack self)))
+  (push (cons key v) (stack self)))
 
 (defmethod stpush ((self scoped-table) desc)
-  (push (list "" desc) (stack self)))
+  (push (cons "" desc) (stack self)))
 
 (defmethod stget ((self scoped-table) key)
   ;; return first match in list of stacks, top-down search
@@ -29,22 +33,20 @@
   ;; this could be implemented in many ways - I've chosen to use the stupidest, hopefully most clear way
   ;; basically, the strategy is to use a stack (alist, plist) of values for each variable, this used
   ;;  to be called "dynamic binding", before mutation corrupted the idea
-  (labels ((top-down-search (stack-of-stacks key)
-             (if (null stack-of-stacks)
-                 (error (format nil "can't find /~a/ in ~a" key self))
-               (let ((top-stack (first stack-of-stacks)))
-                 (multiple-value-bind (match success)
-                     (first-match key top-stack)
-                   (if success
-                       match
-                     (top-down-search (rest stack-of-stacks) key))))))
-           (first-match (key pairs)
-             (if (null pairs)
-                 (values nil nil)
-               (if (equal key (first pairs))
-                   (values (second pairs) t)
-                 (first-match key (rest pairs))))))
-    (top-down-search (stack self) key)))
+  (let ((value-pairs (stack self)))
+    (labels ((first-match (key pairs)
+               (if (null pairs)
+                   (progn
+                     (warning (format nil "can't find /~a/ in ~a" key self))
+                     (values nil nil))  
+                 (let ((keyval (first pairs)))
+                   (if (equal key (car keyval))
+                       (values (cdr keyval) t)
+                     (first-match key (rest pairs)))))))
+      (first-match key value-pairs))))
+
+(defun warning (message)
+  (error message)) ;; maybe, after debugging, we will allow non-matches
 
 (defmethod sttop-scope-as-list ((self scoped-table))
   (let ((result nil)
@@ -52,7 +54,7 @@
         (next-scope (first (scope-stack self))))
     (loop while (not (eq iterator next-scope))
           do (progn
-               (push (second (first iterator)) result)
+               (push (cdr (first iterator)) result)
                (setf iterator (rest iterator))))
     (reverse result)))
 

@@ -59,6 +59,8 @@
   (stput (base self) (key self) v))
 
 
+;; fdesc = ("name" inputs outputs)
+;; where inputs is a alist and outputs is an alist
 (defmethod function-name ((self info-operand-descriptor))
   (assert (string= "function" (dtype self)))
   (first (info self)))
@@ -71,11 +73,11 @@
 (defmethod return-type ((self info-operand-descriptor))
   (assert (string= "function" (dtype self)))
   (let ((outs (function-outputs self)))
-    (first outs)))
+    (cadr outs)))
 (defmethod formals ((self info-operand-descriptor))
   (function-inputs self))
-(defun formal-name (pair) (first pair))
-(defun formal-type (pair) (second pair))
+(defun formal-name (pair) (car pair))
+(defun formal-type (pair) (cdr pair))
 (defmethod builtinp ((self info-operand-descriptor))
   (assert (string= "function" (dtype self)))
   (let ((signature (info self)))

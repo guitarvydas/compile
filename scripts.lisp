@@ -5,7 +5,7 @@
 (defparameter *script-identity* `(
   ($g-defsynonym identity ,($g-func
 			     "identity"
-			     (list (list "c" "char")) ;; param - c
+			     (list (cons "c" "char")) ;; param - c
 			     (list "char"))) ;; return type - char
     
      ($g-pushScope)
@@ -25,7 +25,7 @@
 ;; int main (int argc, char **argv) {
   ($g-defsynonym main ,($g-func
                          "main"
-                         (list (list "argc" "int") (list "argv" "char**")) ;; params - argc, argv
+                         (list (cons "argc" "int") (cons "argv" "char**")) ;; params - argc, argv
                          (list "void"))) ;; return type - none (void)
 
     ($g-pushScope)
@@ -46,7 +46,7 @@
          ($ir-disposereturns)
       ($ir-disposeargs)
 ;;  printf ("result = %c\n", x);
-      ($g-defsynonym printf ,($g-bifunc "printf" (list "string" "varargs") (list "void")))
+      ($g-defsynonym printf ,($g-bifunc "printf" (list (cons "fmt" "string") (cons "varargs" "%rest")) (list "void")))
       ($ir-freshargs)
        ($a-defsynonym %%1 ,($a-var "char" *temp* 1))
        ($ir-createTemp %%1)
