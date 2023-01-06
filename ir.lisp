@@ -14,18 +14,20 @@
 ;; vm  
 
 (defun $g-pushScope ()
-  (stenter *synonyms*))
+  (stenter *synonyms*)
+  (format *standard-output* "pushScope synonyms: ~a~%" (keys-as-list *synonyms*)))
 
 (defun $g-popScope ()
-  (stexit *synonyms*))
+  (stexit *synonyms*)
+  (format *standard-output* "popScope synonyms: ~a~%" (keys-as-list *synonyms*)))
 
 (defun $g-defsynonym (name od)
-  (format *standard-output* " ~a" name)
-  (stput *synonyms* name od))
+  (stput *synonyms* name od)
+  (format *standard-output* "$g-def synonyms: ~a~%" (keys-as-list *synonyms*)))
 
 (defun $ir-defsynonym (name od)
-  (format *standard-output* " ~a" name)
-  (stput *synonyms* name od))
+  (stput *synonyms* name od)
+  (format *standard-output* "$ir-def synonyms: ~a~%" (keys-as-list *synonyms*)))
 
 (defun $ir-pushParameterScope ()
   (stenter *parameter*))

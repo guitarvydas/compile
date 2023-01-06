@@ -15,9 +15,6 @@
                          (list (list "argc" "int") (list "argv" "char**")) ;; params - argc, argv
                          (list "void"))) ;; return type - none (void)
 
-  (stput *code* "identity" *script-identity*)
-  (stput *code* "main" *script-main*)
-  
   ($g-defsynonym 'printf ($g-bifunc "printf" (list "string" "varargs") (list "void")))
 
   ($a-defsynonym '%argc ($a-manifestconstant "int" 1))

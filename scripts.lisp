@@ -41,7 +41,7 @@
   ($ir-initialize '%%0)
   ($ir-pushArg '%%0)
   ($ir-freshreturns)
-  ($ir-call 'identity)
+  ($ir-call 'script-identity)
   ($ir-save-return-value 'identity '%%0)
   ($ir-disposereturns)
   ($ir-disposeargs)
