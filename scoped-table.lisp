@@ -17,8 +17,8 @@
   (push (stack self) (scope-stack self)))
 
 (defmethod stexit ((self scoped-table))
-  (pop (scope-stack self))
-  (setf (stack self) (scope-stack self)))
+  (setf (stack self) (first (scope-stack self)))
+  (pop (scope-stack self)))
   
 
 (defmethod stput ((self scoped-table) key v)
@@ -58,6 +58,9 @@
                (setf iterator (rest iterator))))
     (reverse result)))
 
+(defmethod keys-as-list ((self scoped-table))
+  (let ((result nil))
+    (mapcar #'(lambda (pair) (car pair)) (stack self))))
 
 (defun scoped-table (name)
   (make-instance 'scoped-table :name name))

@@ -59,10 +59,11 @@
       (let ((script (lookup-code (function-name function-descriptor))))
         (push script *instructions*)))))
 
-(defun $ir-save-return-value (function-name od)
-  (let ((function-descriptor (lookup-synonym function-name)))
-    (let ((rettype (return-type function-descriptor)))
-      (save od ($ir-var rettype *result* 0)))))
+(defun $ir-save-return-value (function-name name)
+  (let ((od (lookup-synonym name)))
+    (let ((function-descriptor (lookup-synonym function-name)))
+      (let ((rettype (return-type function-descriptor)))
+        (save od ($ir-var rettype *result* 0))))))
   
 (defun $ir-freshargs ()
   (stenter *arg*))
@@ -126,6 +127,8 @@
       (let ((instruction (pop (first *instructions*))))
         (let ((opcode (first instruction))
               (operands (rest instruction)))
+          (format *standard-output* "synonyms: ~a~%" (keys-as-list *synonyms*))
+          (format *standard-output* "result: ~a~%" (keys-as-list *result*))
           (format *standard-output* "~a" opcode)
           (cond
              ((string-equal "$g-pushScope" opcode) (apply #'$g-pushScope operands))
