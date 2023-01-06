@@ -20,13 +20,12 @@
   
   ($g-defsynonym 'printf ($g-bifunc "printf" (list "string" "varargs") (list "void")))
 
-  (push *script-main* *instructions*)
   ($a-defsynonym '%argc ($a-manifestconstant "int" 1))
   ($ir-pusharg '%argc)
   ($a-defsynonym '%argv ($a-initialized "char**" *globals* 0 ""))
   ($ir-pusharg '%argv)
   (format *standard-output* "~%$-run...~%")
-  ($-run))
+  (script-main))
 
 (defun irtest ()
   (irtest4))
