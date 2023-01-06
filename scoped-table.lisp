@@ -62,6 +62,9 @@
   (let ((result nil))
     (mapcar #'(lambda (pair) (car pair)) (stack self))))
 
+(defmethod as-list ((self scoped-table))
+  (stack self))
+
 (defun scoped-table (name)
   (make-instance 'scoped-table :name name))
 

@@ -48,8 +48,9 @@
     (stexit *parameter*)
     ($-dispose-temps)))
 
-(defun $ir-return-from-function (od)
-  (stpush *result* (value od)))
+(defun $ir-return-from-function (name)
+  (stpush *result* (value name))
+)
 
 (defun $ir-call (name)
   (format *standard-output* " ~a" name)
@@ -128,7 +129,7 @@
         (let ((opcode (first instruction))
               (operands (rest instruction)))
           (format *standard-output* "synonyms: ~a~%" (keys-as-list *synonyms*))
-          (format *standard-output* "result: ~a~%" (keys-as-list *result*))
+          (format *standard-output* "result: ~a~%" (as-list *result*))
           (format *standard-output* "~a" opcode)
           (cond
              ((string-equal "$g-pushScope" opcode) (apply #'$g-pushScope operands))
