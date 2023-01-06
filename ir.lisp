@@ -90,7 +90,7 @@
 (defun $ir-createTemp (name)
   (let ((dd (lookup *synonyms* name)))
     ;; no-op in this (non-optimized) version
-    (declare (ignore dd))))
+    (save dd "<undefined>")))
 
 (defun $ir-call-builtin (function-descriptor)
   (let ((arg-list (reverse (sttop-scope-as-list *arg*))))
