@@ -36,7 +36,7 @@
 ;;;;  of stack for first index that matches (multiple values with the same index can appear in the stack, but the most recent value with an
 ;;;;  index overrides all other values with that same index)
 
-(defmethod value ((self symbol))
+(defmethod value ((self string))
   ;; recursively unwind symbol to extract its underlying data descriptor
   (let ((d (lookup *synonyms* self)))
     (value d)))
@@ -47,7 +47,7 @@
 (defmethod value ((self info-operand-descriptor))
  (info self))
 
-(defmethod save ((self symbol) v)
+(defmethod save ((self string) v)
   ;; recursively unwind symbol to extract its underlying data descriptor
   (let ((d (lookup *synonyms* self)))
     (save d v)))

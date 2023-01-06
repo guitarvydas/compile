@@ -54,8 +54,8 @@
   (stpush *result* (value name))
 )
 
-(defun $ir-call (f)
-  (funcall f))
+(defun $ir-call (fstr)
+  (funcall (intern (string-upcase fstr))))
 
 (defun $ir-save-return-value (function-name name)
   (let ((od (lookup-synonym name)))
@@ -101,11 +101,12 @@
 
 ;; support code - builtin functions
 ;; each function must return its result as a valid data descriptor, or else!
-(defun printf (&rest args)
-  (let ((format-string (value (first args)))
-        (var-args (mapcar #'value (rest args))))
-    (apply 'format format-string var-args)
-    ($g-void))) ;; return void
+(defun printf ()
+  (let ((args (reverse (sttop-scope-as-list *arg*))))
+    (let ((format-string (value (first args)))
+          (var-args (mapcar #'value (rest args))))
+      (apply 'format format-string var-args)
+      ($g-void)))) ;; return void
 
     
 
