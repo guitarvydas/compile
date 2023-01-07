@@ -42,7 +42,7 @@
   ($ir-pushArg "%%0")
   ($ir-freshreturns)
   ($ir-call "script-identity")
-  ($ir-save-return-value "identity" "%%0")
+  ($ir-save-return-value "identity" "x")
   ($ir-disposereturns)
   ($ir-disposeargs)
   ;;  printf ("result = %c\n", x);
