@@ -10,17 +10,17 @@
 (defparameter *globals* (scoped-table "globals"))
 (defparameter *code* (scoped-table "code"))
 (defparameter *synonyms* (scoped-table "synonyms"))
-(defparameter *constants* (scoped-table "constants"))
-(defparameter *temp* (scoped-table "temp"))
-(defparameter *arg* (scoped-table "arg"))
-(defparameter *parameter* (scoped-table "parameter"))
-(defparameter *result* (scoped-table "result"))
+(defparameter *globalConstants* (scoped-table "globalConstants"))
+(defparameter *temps* (scoped-table "temps"))
+(defparameter *args* (scoped-table "args"))
+(defparameter *parameters* (scoped-table "parameters"))
+(defparameter *results* (scoped-table "results"))
 
 (defparameter *scopes* nil)
 
 (defun reset-all ()
   (setf *instructions* nil)
-  (setf *scopes* (list *globals* *code* *constants* *synonyms* *temp* *arg* *parameter* *result*))
+  (setf *scopes* (list *globals* *code* *globalConstants* *synonyms* *temps* *args* *parameters* *results*))
 
   (dolist (space *scopes*)
     (reset space))

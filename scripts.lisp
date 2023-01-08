@@ -1,6 +1,14 @@
 (declaim (optimize (debug 3) (safety 3) (speed 0)))
 
+(define-symbol-macro >> :>>)
+
+
 ;; scripts
+
+;; $defsynonym - add operand and data descriptors to synonyms tabl
+;; $g >> gather pass
+;; $s >> semantic pass, type checking
+;; $i >> interpreter
 
 (defun script-identity  ()
   ($g-defsynonym "identity" ($g-func
@@ -8,17 +16,23 @@
 			    (list (cons "c" "char")) ;; param - c
 			    (list "char"))) ;; return type - char
   
-  ($g-pushScope)
+  ($pushSynonymsScope)
   ;;char identity (char c) {
-  ($ir-pushParameterScope)
-  ($ir-beginFunction "identity") 
-  ($a-defsynonym "c" ($a-var "char" *parameter* "c"))
+  ($i-pushParameterScope)
+  ($i-pushTempsScope)
+  ($i-beginFunction "identity") 
+  ($defsynonym "c" ($s-var "char" *parameter* "c"))
+  ($defsynonym "arg c" ($s-var "char" *args* "c"))
+  ($i-copy "arg c" >> "c")
   ;;  return c;
-  ($ir-return-from-function "c")
+  ($defsynonym "return value" ($s-var "char" *result* "0"))
+  ($i-copy "c" >> "return value")
+  ($i-return-from-function "identity")
   ;;}
-  ($ir-popParameterScope)
-  ($g-popScope)
-  ($ir-endFunction "identity")
+  ($i-popParameterScope)
+  ($i-popTempsScope)
+  ($popSynonymsScope)
+  ($i-endFunction "identity")
   )
 
 (defun script-main ()
@@ -28,42 +42,50 @@
                         (list (cons "argc" "int") (cons "argv" "char**")) ;; params - argc, argv
                         (list "void"))) ;; return type - none (void)
   
-  ($g-pushScope)
-  ($ir-pushParameterScope)
-  ($ir-beginFunction "main")
-  ($g-defsynonym "argc" ($a-var "int" *parameter* "argc"))
-  ($g-defsynonym "argv" ($a-pointer "char**" *parameter* "argv"))
+  ($pushNewScope *synonyms*)
+  ($pushNewScope *parameters*)
+  ($pushNewScope *temps*)
+  ($i-beginFunction "main")
+  ($defsynonym "argc" ($s-var "int" *parameter* "argc"))
+  ($defsynonym "argv" ($s-pointer "char**" *parameter* "argv"))
+  ($defsynonym "arg argc" ($i-var "int" *temp* "0"))
+  ($defsynonym "arg argv" ($i-var "int" *temp* "1"))
+  ($i-copy "arg argc" >> "argc")
+  ($i-copy "arg argv" >> "argv")
   ;;  char x = identity ('x');
-  ($a-defsynonym "x" ($a-var "char" *temp* "x"))
-  ($ir-createTemp "x")
-  ($ir-freshargs)
-  ($ir-defsynonym "%%0" ($a-manifestconstant "char" "x"))
-  ($ir-initialize "%%0")
-  ($ir-pushArg "%%0")
-  ($ir-freshreturns)
-  ($ir-call "script-identity")
-  ($ir-save-return-value "identity" "x")
-  ($ir-disposereturns)
-  ($ir-disposeargs)
+  ($defsynonym "x" ($s-var "char" *temp* "x"))
+  ($defsynonym "undefined" ($i-var "void" _ "<undefined>"))
+  ($i-copy "undefined" >> "x")
+  ($i-push *temp* "x")
+  ($pushNewScope *args*)
+  ($i-defsynonym "%%0" ($i-literal "char" "x"))
+  ($i-initializeLiteral "%%0")
+  ($i-push *args* "%%0")
+  ($pushNewScope *results*)
+  ($i-call "script-identity")
+  ($defsynonym "return 0" ($s-var "char" *result* "return 0"))
+  ($i-copy "return 0" >> "%%0")
+  ($popScope *results*)
+  ($popScope *args*)
   ;;  printf ("result = %c\n", x);
   ($g-defsynonym "PRINTF" ($g-bifunc "printf" (list (cons "fmt" "string") (cons "varargs" "%rest")) (list "void")))
-  ($ir-freshargs)
-  ($a-defsynonym "%%1" ($a-var "char" *temp* 1))
-  ($ir-createTemp "%%1")
-  ($a-defsynonym "%%2" ($a-initialized "string" *globals* "%%2" "result = %c\n"))
-  ($ir-initialize "%%2")
-  ($ir-pushArg "%%2")
-  ($ir-pushArg "x") 
-  ($ir-freshreturns)
-  ($ir-call "PRINTF")
-  ($ir-save-return-value "PRINTF" "%%1")
-  ($ir-disposereturns)
-  ($ir-disposeargs)
-  ($ir-return-from-function ($g-void))
+  ($i-pushNewScope *args*)
+  ($i-push *temp* "%%1")
+  ($i-copy "undefined" >> "%%1")
+  ($a-defsynonym "%%2" ($s-literal "string" *globalConstants* "%%2" "result = %c\n"))
+  ($i-initializeLiteral "%%2")
+  ($i-push *args* "%%2")
+  ($i-push *args* "x") 
+  ($ipushNewScope *result*)
+  ($i-call "PRINTF")
+  ($defsynonym "result from PRINTF" ($i-var "void" *temp* "return from PRINTF 0"))
+  ($i-copy "return value" >> "result from PRINTF")
+  ($popScope *results*)
+  ($popScope *args*)
+  ($i-return-from-function ($g-void))
   ;;}
-  ($ir-popParameterScope)
-  ($g-popScope) 
-  ($ir-endFunction "main")
+  ($popScope *temps*)
+  ($popScope *parameters*)
+  ($popScope *synonyms*) 
+  ($i-endFunction "main")
   )
-
-;; show as # markdown
