@@ -6,12 +6,12 @@
 (defmethod $lookup ((self scoped-table) name)
   (stget self name))
 
-(defun $pushNewScope (space)
-  (stenter space)
+(defun $pushNewScope (base)
+  (stenter base))
     
-(defun $popScope (space)
-  (stexit space)
+(defun $popScope (base)
+  (stexit base))
     
-(defun $push (space synonym)
-  (let ((desc ($get space synonym)))
-    (stpush space desc)))
+(defun $push (base synonym)
+  (let ((desc (stget base synonym)))
+    (stpush base desc)))

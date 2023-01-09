@@ -20,10 +20,10 @@
 
 (defmethod $get ((self string))
   ;; recursively unwind symbol to extract its underlying data descriptor
-  (let ((d (lookup *synonyms* self)))
+  (let ((d ($lookup *synonyms* self)))
     ($get d)))
 
-(defmethod $get ((self operand-descriptor)) ;; char | number | string | addres
+(defmethod $get ((self operand-descriptor))
   (cond
    ((= 1 (indirection self))
     (coerce (dtype self) (stget (base self) (key self))))
@@ -34,14 +34,9 @@
 					 :dtype (dtype self)
 					 :key (assert nil) ;???
 					 :@ 1)))
-   ((< 2 (indirection self))
-    (let ((decremented-indirection (1- (indirection self))))
-      (let ((pointer-desc (make-instance 'operand-descriptor 
-					 :base (base self)
-					 :dtype (dtype self)
-					 :key (cond ((= 1 decremented-indirection) (indirection self))
-						     (t (+ 0 (key self)))))
-					 :@ decremented-indirection)))
+        ($get pointer-desc))))
+   ((> (indirection self) 2)
+    (assert nil))
    (t (assert nil))))
 
 (defmethod $get ((self literal-operand-descriptor))
