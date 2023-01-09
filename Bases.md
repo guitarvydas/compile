@@ -1,0 +1,10 @@
+```
+*globals*
+*code*
+*synonyms*
+*constants*
+*temps*
+*args*
+*parameters*
+*results*
+```

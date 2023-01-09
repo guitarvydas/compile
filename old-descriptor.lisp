@@ -1,58 +1,61 @@
 (declaim (optimize (debug 3) (safety 3) (speed 0)))
 
 (defclass operand-descriptor ()
+  ((dtype :accessor dtype :initarg :dtype)))
+
+(defclass initialized-operand-descriptor (operand-descriptor)
   ((dtype :accessor dtype :initarg :dtype)
-   (indirection :accessor indirection :initarg :@ :initform 1)
-   (base :accessor base :initarg :base)
-   (key :accessor key :initarg :key)))
+   (value :accessor value :initarg :value :initform nil)))
 
 (defclass info-operand-descriptor (operand-descriptor)
-  ((info :accessor info :initarg :info)))
+  ((dtype :accessor dtype :initarg :dtype)
+   (info :accessor info :initarg :info :initform nil)))
 
-(defclass literal-operand-descriptor (operand-descriptor)
-  ((value :accessor value :initarg :value))
-  (:default-initargs
-   :@ 0))
+(defclass pointer-operand-descriptor (operand-descriptor)
+  ((dtype :accessor dtype :initarg :dtype)
+   (od :accessor od :initarg :od :initform nil)))
+
+
+(defclass data-descriptor ()
+  ((dtype :accessor dtype :initarg :dtype)))
+
+(defclass dd-direct (data-descriptor)
+   ((value :accessor value :initarg :value :initform nil)))
+
+(defclass dd-initialized-indirect (data-descriptor)
+  ((base :accessor base :initarg :base)
+   (key :accessor key :initarg :key)
+   (value :accessor value :initarg :value)))
+
+
+(defclass dd-indirect (data-descriptor)  ;; dtype = char | number | string | pointer
+   ((base :accessor base :initarg :base)
+    (key :accessor key :initarg :key)))
 
 ;;;; toolbox: simplistic implementation of Data Descriptors as sparse arrays - stacks of indexed values, no mutation, linear search from top
 ;;;;  of stack for first index that matches (multiple values with the same index can appear in the stack, but the most recent value with an
 ;;;;  index overrides all other values with that same index)
 
-(defmethod $get ((self string))
+(defmethod value ((self string))
   ;; recursively unwind symbol to extract its underlying data descriptor
   (let ((d (lookup *synonyms* self)))
-    ($get d)))
+    (value d)))
 
-(defmethod $get ((self operand-descriptor)) ;; char | number | string | addres
-  (cond
-   ((= 1 (indirection self))
-    (coerce (dtype self) (stget (base self) (key self))))
-   ((= 2 (indirection self))
-    (let ((decremented-indirection (1- (indirection self))))
-      (let ((pointer-desc (make-instance 'operand-descriptor 
-					 :base (base self)
-					 :dtype (dtype self)
-					 :key (assert nil) ;???
-					 :@ 1)))
-   ((< 2 (indirection self))
-    (let ((decremented-indirection (1- (indirection self))))
-      (let ((pointer-desc (make-instance 'operand-descriptor 
-					 :base (base self)
-					 :dtype (dtype self)
-					 :key (cond ((= 1 decremented-indirection) (indirection self))
-						     (t (+ 0 (key self)))))
-					 :@ decremented-indirection)))
-   (t (assert nil))))
+(defmethod value ((self dd-indirect)) ;; char | number | string | addres
+  (stget (base self) (key self)))
 
-(defmethod $get ((self literal-operand-descriptor))
-  (value self))
+(defmethod value ((self info-operand-descriptor))
+ (info self))
 
-(defmethod $save ((self string) v)
+(defmethod save ((self string) v)
   ;; recursively unwind symbol to extract its underlying data descriptor
-  (let ((d ($lookup *synonyms* self)))
-    ($save d v)))
+  (let ((d (lookup *synonyms* self)))
+    (save d v)))
 
-(defmethod $save ((self operand-descriptor) v)
+(defmethod save ((self dd-direct) v)
+  )
+
+(defmethod save ((self dd-indirect) v)
   (stput (base self) (key self) v))
 
 

@@ -7,42 +7,15 @@
 
 (define-symbol-macro _ :_)
 
-(defun $ir-var (typename space offset)
-  ($a-var typename space offset))
-
 
 ;; vm  
-
-(defun $g-pushScope ()
-  (stenter *synonyms*)
-  (format *standard-output* "pushScope synonyms: ~a~%" (keys-as-list *synonyms*)))
-
-(defun $g-popScope ()
-  (stexit *synonyms*)
-  (format *standard-output* "popScope synonyms: ~a~%" (keys-as-list *synonyms*)))
-
-(defun $g-defsynonym (name od)
-  (stput *synonyms* name od)
-  (format *standard-output* "$g-def synonyms: ~a~%" (keys-as-list *synonyms*)))
-
-(defun $ir-defsynonym (name od)
-  (stput *synonyms* name od)
-  (format *standard-output* "$ir-def synonyms: ~a~%" (keys-as-list *synonyms*)))
-
-(defun $ir-pushParameterScope ()
-  (stenter *parameter*))
-
-(defun $ir-popParameterScope ()
-  (stexit *parameter*))
 
 (defun $ir-beginFunction (name)
   (let ((function-descriptor (lookup *synonyms* name)))
     ;; emit label and function prequel ...>> (name function-descriptor)
     ;; and, bind args to params, in correct order (a3 a2 a1) -> (p1 p2 p3)
     (let ((arg-pairs (reverse (sttop-scope-as-list *arg*))))
-      (stenter *parameter*)
-      (bind-formals function-descriptor arg-pairs)
-      ($-fresh-temps))))
+      (bind-formals function-descriptor arg-pairs))))
 
 (defun $ir-endFunction (name)
   (let ((function-descriptor (value name)))
@@ -63,14 +36,6 @@
       (let ((rettype (return-type function-descriptor)))
         (save od ($ir-var rettype *result* 0))))))
   
-(defun $ir-freshargs ()
-  (stenter *arg*))
-(defun $ir-pushArg (v)
-  (let ((d (lookup *synonyms* v)))
-    (stpush *arg* d)))
-(defun $ir-disposeargs ()
-  (stexit *arg*))
-
 (defun $ir-initialize (name)
   ;; initialize a constant in memory at compile-time, if necessary
   ;; the Allocator has decided which constants are manifest for this given CPU architecture, and,

@@ -11,8 +11,7 @@
 	  ;; phases
 	  (ld "gather.lisp")
 	  (ld "semantics-checker.lisp")
-	  (ld "alloc.lisp")
-	  (ld "ir.lisp")
+	  (ld "i.lisp")
 
 	  ;; scripts
 	  (ld "scripts.lisp")

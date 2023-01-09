@@ -3,3 +3,5 @@ node_modules/
 junk*
 bred/
 fab/
+
+.DS_Store
