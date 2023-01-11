@@ -23,7 +23,7 @@
     ($defsynonym *synonyms* "%argc" ($s-literal "int" 1))
     ($defsynonym *synonyms* "TestName" ($s-literal "char[]" '((0 . #\T) (1 . #\e) (2 . #\s) (3 . #\t) (4 . #\Null))))
 
-    ($defsynonym *synonyms* "ixTestName" ($s-literal-index ($get ($lookup *synonyms* "TestName")) 0))
+    ($defsynonym *synonyms* "ixTestName" ($s-literal-index ($lookup *synonyms* "TestName") 0))
     ($defsynonym *synonyms* "*TestName" ($s-var "pointer" *temps* "*TestName"))
     ($i-copy "ixTestName" >> "*TestName")    
     ($push *temps* ($get ($lookup *synonyms* "*TestName")))
