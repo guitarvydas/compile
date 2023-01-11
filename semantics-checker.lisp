@@ -6,8 +6,8 @@
 (defun $s-literal (typename value)
   (make-instance 'literal-operand-descriptor :dtype typename :value value))
 
-(defun $s-literal-index (descriptor offset)
-  (make-instance 'literal-index-operand-descriptor :target descriptor :offset offset))
+(defun $s-literal-index (compound offset)
+  (make-instance 'literal-index-operand-descriptor :container compound :offset offset))
 
-(defun $s-literal-stack-pointer (descriptor)
-  (make-instance 'literal-stack-pointer-operand-descriptor :target descriptor))
+(defun $s-literal-stack-pointer (compound)
+  (make-instance 'literal-stack-pointer-operand-descriptor :container compound))

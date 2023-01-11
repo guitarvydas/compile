@@ -23,7 +23,7 @@
 	 
 	 ;;char identity (char c) {
 	 ($defsynonym *synonyms* "c" ($s-var "char" *parameters* "c"))
-	 ($defsynonym *synonyms* "arg c" ($s-var "char" *args* "c"))
+         ($defsynonym *synonyms* "arg c" (make-instance 'literal-index-operand-descriptor :dtype "char" :container *args* :offset 0))
 	 ($i-copy "arg c" >> "c")
 	 ;;  return c;
 	 ($defsynonym *synonyms* "return value" ($s-var "char" *results* "0"))

@@ -12,10 +12,10 @@
   ((value :accessor value :initarg :value)))
 
 (defclass literal-index-operand-descriptor (basic-operand-descriptor)
-  ((target :accessor target :initarg :target)
+  ((container :accessor container :initarg :container)
    (offset :accessor offset :initarg :offset :initform 0)))
 (defclass literal-stack-pointer-operand-descriptor (basic-operand-descriptor)
-  ((target :accessor target :initarg :target)))
+  ((container :accessor container :initarg :container)))
 
 (defclass literal-info-operand-descriptor (basic-operand-descriptor)
   ((info :accessor info :initarg :info)))
@@ -37,11 +37,11 @@
   ($coerce (dtype self) (stget (base self) (key self))))
 
 (defmethod $get ((self literal-index-operand-descriptor))
-  (let ((arr ($get (target self))))
+  (let ((arr (container (target self))))
     (nth (offset self) arr)))
 
 (defmethod $get ((self literal-stack-pointer-operand-descriptor))
-  (let ((arr ($get (target self))))
+  (let ((arr (container (target self))))
     (first arr)))
 
 (defmethod $get ((self literal-operand-descriptor))
@@ -56,10 +56,10 @@
   (stput (base self) (key self) v))
 
 (defmethod $save ((self literal-index-operand-descriptor) v)
-  (stput (nth (offset self) (target self)) v))
+  (stput (nth (offset self) (container (target self))) v))
 
 (defmethod $save ((self literal-stack-pointer-operand-descriptor) v)
-  (stput (first (target self)) v))
+  (stput (first (container (target self))) v))
 
 
 ;; fdesc = ("name" inputs outputs)
