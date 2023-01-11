@@ -37,12 +37,14 @@
   ($coerce (dtype self) (stget (base self) (key self))))
 
 (defmethod $get ((self literal-index-operand-descriptor))
-  (let ((arr (container (target self))))
-    (nth (offset self) arr)))
+  (let ((sc-table (container self)))
+    (let ((stack (stack sc-table)))
+      (nth (offset self) stack))))
 
 (defmethod $get ((self literal-stack-pointer-operand-descriptor))
-  (let ((arr (container (target self))))
-    (first arr)))
+  (let ((sc-table (container self)))
+    (let ((stack (stack sc-table)))
+      (first (offset self) stack))))
 
 (defmethod $get ((self literal-operand-descriptor))
   (value self))
@@ -56,10 +58,10 @@
   (stput (base self) (key self) v))
 
 (defmethod $save ((self literal-index-operand-descriptor) v)
-  (stput (nth (offset self) (container (target self))) v))
+  (stput (nth (offset self) (container self)) v))
 
 (defmethod $save ((self literal-stack-pointer-operand-descriptor) v)
-  (stput (first (container (target self))) v))
+  (stput (first (container self)) v))
 
 
 ;; fdesc = ("name" inputs outputs)

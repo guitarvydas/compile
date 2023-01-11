@@ -6,8 +6,10 @@
 (defun $s-literal (typename value)
   (make-instance 'literal-operand-descriptor :dtype typename :value value))
 
-(defun $s-literal-index (compound offset)
-  (make-instance 'literal-index-operand-descriptor :container compound :offset offset))
+(defun $s-literal-index (sc-table offset)
+  (assert (eq 'scoped-table (type-of sc-table)))
+  (make-instance 'literal-index-operand-descriptor :container sc-table :offset offset))
 
-(defun $s-literal-stack-pointer (compound)
-  (make-instance 'literal-stack-pointer-operand-descriptor :container compound))
+(defun $s-literal-stack-pointer (sc-table)
+  (assert (eq 'scoped-table (type-of sc-table)))
+  (make-instance 'literal-stack-pointer-operand-descriptor :container sc-table))
