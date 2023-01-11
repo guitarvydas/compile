@@ -51,7 +51,7 @@
 	 ($defsynonym *synonyms* "argv" ($s-var "char**" *parameters* "argv"))
 	 ;;  char x = identity ('x');
 	 ($defsynonym *synonyms* "x" ($s-var "char" *temps* "x"))
-	 ($defsynonym *synonyms* "undefined" ($s-var "void" _ "<undefined>"))
+	 ($defsynonym *synonyms* "undefined" ($s-literal "void" "<undefined>"))
 	 ($i-copy "undefined" >> "x")
 	 ($push *temps* ($get ($lookup *synonyms* "x")))
 	 ($pushNewScope *args*)

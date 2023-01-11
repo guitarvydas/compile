@@ -28,7 +28,7 @@
     ($i-copy "ixTestName" >> "*TestName")    
     ($push *temps* ($get ($lookup *synonyms* "*TestName")))
 
-    ($defsynonym *synonyms* "ix*TestName" ($s-literal-index ($get ($lookup *synonyms* "*TestName")) 0))
+    ($defsynonym *synonyms* "ix*TestName" ($s-literal-index ($lookup *synonyms* "*TestName") 0))
     ($defsynonym *synonyms* "**TestName" ($s-var "pointer[]" *args* "*TestName"))
     ($i-copy "ix*TestName" >> "**TestName")    
 
