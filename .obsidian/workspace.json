@@ -18,8 +18,19 @@
                 "source": false
               }
             }
+          },
+          {
+            "id": "b0bf63495862a757",
+            "type": "leaf",
+            "state": {
+              "type": "excalidraw",
+              "state": {
+                "file": "Excalidraw/argv 2023-01-09 15.11.05.excalidraw.md"
+              }
+            }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -85,7 +96,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Bases.md",
+                "file": "Excalidraw/argv 2023-01-09 15.11.05.excalidraw.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -102,7 +113,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Bases.md",
+                "file": "Excalidraw/argv 2023-01-09 15.11.05.excalidraw.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -125,7 +136,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Bases.md"
+                "file": "Excalidraw/argv 2023-01-09 15.11.05.excalidraw.md"
               }
             }
           }
@@ -143,11 +154,14 @@
       "canvas:Create new canvas": false,
       "daily-notes:Open today's daily note": false,
       "templates:Insert template": false,
-      "command-palette:Open command palette": false
+      "command-palette:Open command palette": false,
+      "obsidian-excalidraw-plugin:New Excalidraw drawing": false
     }
   },
-  "active": "3e795f65c8002af4",
+  "active": "b0bf63495862a757",
   "lastOpenFiles": [
+    "argv.md",
+    "Bases.md",
     "Excalidraw/Scoped Stack for Parameter Space Drawing 2023-01-04 15.45.15.excalidraw.md",
     "Excalidraw/Drawing 2022-12-31 10.29.51.excalidraw.md",
     "Excalidraw/old-Drawing 2022-12-21 10.34.32.excalidraw.md"

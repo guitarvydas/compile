@@ -5,14 +5,14 @@
 ;; *synonyms* defined in descriptor.lisp
 
 
-(define-symbol-macro _ :_)
+(define-symbol-macro _ nil)
 
 
 ;; vm  
 
 (defun $i-beginFunction (name)
   ;; prologue code if any
-  (let ((function-descriptor (lookup *synonyms* name)))
+  (let ((function-descriptor ($lookup *synonyms* name)))
     (declare (ignore function-descriptor))))
 
 (defun $i-endFunction (name)
@@ -20,17 +20,19 @@
   (let ((function-descriptor (value name)))
     (declare (ignore function-descriptor))))
 
-(defun $i-copy (operand1 operand2)
+(defun $i-copy (operand1 sugar operand2)
+  (declare (ignore sugar))
   ;; copy data from slot in operand1 into slot of operand2
-  (let ((data ($get ($lookup operand1))))
+  (let ((data ($get ($lookup *synonyms* operand1))))
     ($save operand2 data)))
 
-(defun $ir-return-from-function (name)
+(defun $i-return-from-function (name)
   ;; go back to caller
-  (return-from script))
+  (declare (ignore name))
+  (throw 'script nil))
 
 (defun $i-push (base name)
-  (let ((data ($get ($lookup ($lookup name)))))
+  (let ((data ($get ($lookup *synonyms* ($lookup *synonyms* name)))))
     (stpush base data)))
 
 (defun $i-initializeLiteral (name)
@@ -47,7 +49,7 @@
   ;;  matter when we transpile code to some other language (like Lisp), in
   ;;  which case we simply punt the issue to the underlying compiler and let it
   ;;  worry about where to allocate literal data.
-  (let ((data ($get ($lookup name))))
+  (let ((data ($get ($lookup *synonyms* name))))
     (declare (ignore data))))
 
 (defun $i-call (function-name)

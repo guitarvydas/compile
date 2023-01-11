@@ -2,28 +2,49 @@
 
 ;;;
 
-(defun irtest4 ()
+(defun itest4 ()
   (reset-all)
-  ($g-pushScope)
-  ($g-defsynonym "identity" ($g-func
+  ($pushNewScope *synonyms*)
+  ($pushNewScope *parameters*)
+  ($pushNewScope *temps*)
+  (block script
+    ($defsynonym *synonyms* "identity" ($g-func
 			     "identity"
 			     (list (list "c" "char")) ;; param - c
 			     (list "char"))) ;; return type - char
     
-  ($g-defsynonym "main" ($g-func
+    ($defsynonym *synonyms* "main" ($g-func
                          "main"
                          (list (list "argc" "int") (list "argv" "char**")) ;; params - argc, argv
                          (list "void"))) ;; return type - none (void)
+    
+    ($defsynonym *synonyms* "PRINTF" ($g-bifunc "printf" (list "string" "varargs") (list "void")))
+    
+    ($defsynonym *synonyms* "%argc" ($s-literal "int" 1))
+    ($defsynonym *synonyms* "TestName" ($s-literal "char[]" '((0 . #\T) (1 . #\e) (2 . #\s) (3 . #\t) (4 . #\Null))))
 
-  ($g-defsynonym "PRINTF" ($g-bifunc "printf" (list "string" "varargs") (list "void")))
+    ($defsynonym *synonyms* "ixTestName" ($s-literal-index ($get ($lookup *synonyms* "TestName")) 0))
+    ($defsynonym *synonyms* "*TestName" ($s-var "pointer" *temps* "*TestName"))
+    ($i-copy "ixTestName" >> "*TestName")    
+    ($push *temps* ($get ($lookup *synonyms* "*TestName")))
 
-  ($a-defsynonym "%argc" ($a-manifestconstant "int" 1))
-  ($ir-pusharg "%argc")
-  ($a-defsynonym "%argv" ($a-initialized "char**" *globals* 0 ""))
-  ($ir-pusharg "%argv")
-  (format *standard-output* "~%$-run...~%")
-  (script-main))
+    ($defsynonym *synonyms* "ix*TestName" ($s-literal-index ($get ($lookup *synonyms* "*TestName")) 0))
+    ($defsynonym *synonyms* "**TestName" ($s-var "pointer[]" *args* "*TestName"))
+    ($i-copy "ix*TestName" >> "**TestName")    
 
-(defun irtest ()
-  (irtest4))
+    ($pushNewScope *results*)
+    (block call-script
+      ($push *args* ($get ($lookup *synonyms* "%argc")))
+      ($push *args* ($get ($lookup *synonyms* "**TestName")))
+      (format *standard-output* "~%$-run...~%")
+      (script-main))
+    ($popScope *args*)
+    ($popScope *results*))
+  ($popScope *temps*)
+  ($popScope *parameters*)
+  ($popScope *synonyms*))
+
+    
+(defun itest ()
+  (itest4))
 

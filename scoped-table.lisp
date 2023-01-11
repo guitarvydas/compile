@@ -24,8 +24,8 @@
 (defmethod stput ((self scoped-table) key v)
   (push (cons key v) (stack self)))
 
-(defmethod stpush ((self scoped-table) desc)
-  (push (cons "" desc) (stack self)))
+(defmethod stpush ((self scoped-table) v)
+  (push (cons "" v) (stack self)))
 
 (defmethod stget ((self scoped-table) key)
   ;; return first match in list of stacks, top-down search
@@ -35,14 +35,17 @@
   ;;  to be called "dynamic binding", before mutation corrupted the idea
   (let ((value-pairs (stack self)))
     (labels ((first-match (key pairs)
-               (if (null pairs)
-                   (progn
-                     (warning (format nil "can't find /~a/ in ~a" key self))
-                     (values nil nil))  
-                 (let ((keyval (first pairs)))
-                   (if (equal key (car keyval))
-                       (values (cdr keyval) t)
-                     (first-match key (rest pairs)))))))
+               (cond
+                ((null pairs)
+                 (warning (format nil "can't find /~a/ in ~a" key self))
+                 (values nil nil))
+                (t (let ((keyval (first pairs)))
+                     (let ((address (first keyval))
+                           (data (cdr keyval)))
+                       (cond
+                        ((equal key address)
+                         (values data t))
+                        (t (first-match key (rest pairs))))))))))
       (first-match key value-pairs))))
 
 (defun warning (message)

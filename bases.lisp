@@ -19,7 +19,6 @@
 (defparameter *scopes* nil)
 
 (defun reset-all ()
-  (setf *instructions* nil)
   (setf *scopes* (list *globals* *code* *globalConstants* *synonyms* *temps* *args* *parameters* *results*))
 
   (dolist (space *scopes*)

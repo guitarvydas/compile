@@ -12,6 +12,5 @@
 (defun $popScope (base)
   (stexit base))
     
-(defun $push (base synonym)
-  (let ((desc (stget base synonym)))
-    (stpush base desc)))
+(defun $push (base v)
+  (stpush base v))

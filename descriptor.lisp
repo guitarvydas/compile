@@ -1,20 +1,26 @@
 (declaim (optimize (debug 3) (safety 3) (speed 0)))
 
-(defclass operand-descriptor ()
-  ((dtype :accessor dtype :initarg :dtype)
-   (indirection :accessor indirection :initarg :@ :initform 1)
+(defclass basic-operand-descriptor ()
+  ((dtype :accessor dtype :initarg :dtype)))
+
+(defclass operand-descriptor (basic-operand-descriptor)
+  ((indirection :accessor indirection :initarg :@ :initform 1)
    (base :accessor base :initarg :base)
    (key :accessor key :initarg :key)))
 
-(defclass info-operand-descriptor (operand-descriptor)
+(defclass literal-operand-descriptor (basic-operand-descriptor)
+  ((value :accessor value :initarg :value)))
+
+(defclass literal-index-operand-descriptor (basic-operand-descriptor)
+  ((target :accessor target :initarg :target)
+   (offset :accessor offset :initarg :offset :initform 0)))
+(defclass literal-stack-pointer-operand-descriptor (basic-operand-descriptor)
+  ((target :accessor target :initarg :target)))
+
+(defclass literal-info-operand-descriptor (basic-operand-descriptor)
   ((info :accessor info :initarg :info)))
 
-(defclass literal-operand-descriptor (operand-descriptor)
-  ((value :accessor value :initarg :value))
-  (:default-initargs
-   :@ 0))
-
-;;;; toolbox: simplistic implementation of Data Descriptors as sparse arrays - stacks of indexed values, no mutation, linear search from top
+;;;; toolbox: simplistic implementation of Operand Descriptors as sparse arrays - stacks of indexed values, no mutation, linear search from top
 ;;;;  of stack for first index that matches (multiple values with the same index can appear in the stack, but the most recent value with an
 ;;;;  index overrides all other values with that same index)
 
@@ -24,20 +30,15 @@
     ($get d)))
 
 (defmethod $get ((self operand-descriptor))
-  (cond
-   ((= 1 (indirection self))
-    (coerce (dtype self) (stget (base self) (key self))))
-   ((= 2 (indirection self))
-    (let ((decremented-indirection (1- (indirection self))))
-      (let ((pointer-desc (make-instance 'operand-descriptor 
-					 :base (base self)
-					 :dtype (dtype self)
-					 :key (assert nil) ;???
-					 :@ 1)))
-        ($get pointer-desc))))
-   ((> (indirection self) 2)
-    (assert nil))
-   (t (assert nil))))
+  (coerce (dtype self) (stget (base self) (key self))))
+
+(defmethod $get ((self literal-index-operand-descriptor))
+  (let ((arr ($get (target self))))
+    (nth (offset self) arr)))
+
+(defmethod $get ((self literal-stack-pointer-operand-descriptor))
+  (let ((arr ($get (target self))))
+    (first arr)))
 
 (defmethod $get ((self literal-operand-descriptor))
   (value self))
@@ -50,32 +51,38 @@
 (defmethod $save ((self operand-descriptor) v)
   (stput (base self) (key self) v))
 
+(defmethod $save ((self literal-index-operand-descriptor) v)
+  (stput (nth (offset self) (target self)) v))
+
+(defmethod $save ((self literal-stack-pointer-operand-descriptor) v)
+  (stput (first (target self)) v))
+
 
 ;; fdesc = ("name" inputs outputs)
 ;; where inputs is a alist and outputs is an alist
-(defmethod function-name ((self info-operand-descriptor))
+(defmethod function-name ((self literal-info-operand-descriptor))
   (assert (string= "function" (dtype self)))
   (first (info self)))
-(defmethod function-inputs ((self info-operand-descriptor))
+(defmethod function-inputs ((self literal-info-operand-descriptor))
   (assert (string= "function" (dtype self)))
   (second (info self)))
-(defmethod function-outputs ((self info-operand-descriptor))
+(defmethod function-outputs ((self literal-info-operand-descriptor))
   (assert (string= "function" (dtype self)))
   (third (info self)))
-(defmethod return-type ((self info-operand-descriptor))
+(defmethod return-type ((self literal-info-operand-descriptor))
   (assert (string= "function" (dtype self)))
   (let ((outs (function-outputs self)))
     (cadr outs)))
-(defmethod formals ((self info-operand-descriptor))
+(defmethod formals ((self literal-info-operand-descriptor))
   (function-inputs self))
 (defun formal-name (pair) (car pair))
 (defun formal-type (pair) (cdr pair))
-(defmethod builtinp ((self info-operand-descriptor))
+(defmethod builtinp ((self literal-info-operand-descriptor))
   (assert (string= "function" (dtype self)))
   (let ((signature (info self)))
     (and (<= (length signature) 4)
          (eq 'builtin (fourth signature)))))
-(defmethod function-symbol ((self info-operand-descriptor))
+(defmethod function-symbol ((self literal-info-operand-descriptor))
   (let ((fname (function-name self)))
     (if (stringp fname)
         (intern (string-upcase fname))

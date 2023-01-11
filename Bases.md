@@ -2,7 +2,7 @@
 *globals*
 *code*
 *synonyms*
-*constants*
+*globalConstants*
 *temps*
 *args*
 *parameters*
