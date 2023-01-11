@@ -29,8 +29,12 @@
   (let ((d ($lookup *synonyms* self)))
     ($get d)))
 
+(defun $coerce (ty v)
+  (declare (ignore ty))
+  v) ;; noop for this POC, might need to emit code in a real compiler
+
 (defmethod $get ((self operand-descriptor))
-  (coerce (dtype self) (stget (base self) (key self))))
+  ($coerce (dtype self) (stget (base self) (key self))))
 
 (defmethod $get ((self literal-index-operand-descriptor))
   (let ((arr ($get (target self))))
