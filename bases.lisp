@@ -7,14 +7,24 @@
 ;;   linear search strategy (this can be later optimized to mutate values at given indices)
 
 
-(defparameter *globals* (scoped-table "globals"))
-(defparameter *code* (scoped-table "code"))
-(defparameter *synonyms* (scoped-table "synonyms"))
-(defparameter *globalConstants* (scoped-table "globalConstants"))
-(defparameter *temps* (scoped-table "temps"))
-(defparameter *args* (scoped-table "args"))
-(defparameter *parameters* (scoped-table "parameters"))
-(defparameter *results* (scoped-table "results"))
+(defparameter *globals* 'undefined)
+(defparameter *code* 'undefined)
+(defparameter *synonyms* 'undefined)
+(defparameter *globalConstants* 'undefined)
+(defparameter *temps* 'undefined)
+(defparameter *args* 'undefined)
+(defparameter *parameters* 'undefined)
+(defparameter *results* 'undefined)
+
+(defun cold-start ()
+  (setf *globals* (scoped-table "globals"))
+  (setf *code* (scoped-table "code"))
+  (setf *synonyms* (scoped-table "synonyms"))
+  (setf *globalConstants* (scoped-table "globalConstants"))
+  (setf *temps* (scoped-table "temps"))
+  (setf *args* (scoped-table "args"))
+  (setf *parameters* (scoped-table "parameters"))
+  (setf *results* (scoped-table "results")))
 
 (defparameter *scopes* nil)
 

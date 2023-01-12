@@ -4,8 +4,9 @@
              (load (format nil "~a~a" root fname))))
 	  ;; basics
 	  (ld "scoped-table.lisp")
-	  (ld "synonyms.lisp")
 	  (ld "bases.lisp")
+          (cold-start)
+	  (ld "synonyms.lisp")
 	  (ld "descriptor.lisp")
 
 	  ;; phases
