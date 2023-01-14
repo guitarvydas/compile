@@ -6,8 +6,7 @@
   (reset-all)
   ($pushNewScope *synonyms*)
   ($pushNewScope *parameters*)
-  ($pushNewScope *temps*)
-  (block script
+  (catch 'script
     ($defsynonym *synonyms* "identity" ($g-func
 			     "identity"
 			     (list (list "c" "char")) ;; param - c
@@ -22,32 +21,30 @@
     
     ($defsynonym *synonyms* "%argc" ($s-literal "int" 1))
     (let ((c (make-instance 'Collection)))
-      (cpush c #\Null)
-      (cpush c #\t)
-      (cpush c #\s)
-      (cpush c #\e)
-      (cpush c #\T)
-      ($defsynonym *synonyms* "TestName" ($s-literal "char[]" st))
-      ($defsynonym *synonyms* "ixTestName" ($s-literal-index ($get ($lookup *synonyms* "TestName")) 0))
-      ($defsynonym *synonyms* "*TestName" ($s-var "pointer" *temps* "*TestName"))
-      ($i-copy "ixTestName" >> "*TestName")    
-      ($push *temps* ($get ($lookup *synonyms* "*TestName")))
-      
-      ($defsynonym *synonyms* "ix*TestName" ($s-literal-index ($get ($lookup *synonyms* "*TestName")) 0))
-      ($defsynonym *synonyms* "**TestName" ($s-var "pointer[]" *args* "*TestName"))
-      ($i-copy "ix*TestName" >> "**TestName")    
-      
-      ($pushNewScope *results*)
-      (block call-script
-        ($push *args* ($get ($lookup *synonyms* "%argc")))
-        ($push *args* ($get ($lookup *synonyms* "**TestName")))
-        (format *standard-output* "~%$-run...~%")
-        (script-main))
-      ($popScope *args*)
-      ($popScope *results*)))
-  ($popScope *temps*)
-  ($popScope *parameters*)
-  ($popScope *synonyms*))
+      (cpush c ($s-literal "char" ($s-literal "char" #\Null)))
+      (cpush c ($s-literal "char" ($s-literal "char" #\t)))
+      (cpush c ($s-literal "char" ($s-literal "char" #\s)))
+      (cpush c ($s-literal "char" ($s-literal "char" #\e)))
+      (cpush c ($s-literal "char" ($s-literal "char" #\T)))
+      ($defsynonym *synonyms* "TestName" ($s-collection "char[]" c))
+
+      (let ((pointer-to-char-array ($s-literal-index ($get ($lookup *synonyms* "TestName")) 0)))
+
+      (let ((collection-of-pointer-char-array (make-instance 'Collection)))
+        (cpush collection-of-pointer-char-array pointer-to-char)
+	
+	($defsynonym *synonyms* "argv for testing" ($s-literal-index collection-of-pointer-char-array 0))
+
+        ($pushNewScope *results*)
+        (catch 'script
+          ($push *args* ($get ($lookup *synonyms* "argv for testing")))
+          ($push *args* ($get ($lookup *synonyms* "argc")))
+          (format *standard-output* "~%$-run...~%")
+          (script-main))
+        ($popScope *args*)
+        ($popScope *results*))))
+    ($popScope *parameters*)
+    ($popScope *synonyms*)))
 
     
 (defun itest ()

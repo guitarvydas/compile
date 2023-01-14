@@ -58,10 +58,10 @@
   (stput (base self) (key self) v))
 
 (defmethod $save ((self literal-index-operand-descriptor) v)
-  (stput (nth (offset self) (container self)) v))
+  (stpush (nth (offset self) (container self)) v))
 
 (defmethod $save ((self literal-stack-pointer-operand-descriptor) v)
-  (stput (first (container self)) v))
+  (stpush (first (container self)) v))
 
 
 ;; fdesc = ("name" inputs outputs)
