@@ -14,11 +14,13 @@
 (defclass literal-index-operand-descriptor (basic-operand-descriptor)
   ((container :accessor container :initarg :container)
    (offset :accessor offset :initarg :offset :initform 0)))
-(defclass literal-stack-pointer-operand-descriptor (basic-operand-descriptor)
-  ((container :accessor container :initarg :container)))
 
 (defclass literal-info-operand-descriptor (basic-operand-descriptor)
   ((info :accessor info :initarg :info)))
+
+(defclass collection-operand-descriptor (basic-operand-descriptor)
+  ;; for now, a Lisp list
+  ((container :accessor container :initarg :container :initform nil)))
 
 ;;;; toolbox: simplistic implementation of Operand Descriptors as sparse arrays - stacks of indexed values, no mutation, linear search from top
 ;;;;  of stack for first index that matches (multiple values with the same index can appear in the stack, but the most recent value with an
@@ -96,3 +98,11 @@
           fname
         (error (format nil "wanted function-symbol that is a string or a symbol, but got ~a for ~a"
                        (type-of fname) fname))))))
+
+
+(defmethod $cpush (v (od collection-operand-descriptor))
+  (push v (container od)))
+
+(defmethod $cappend (v (od collection-operand-descriptor))
+  (setf (container od)
+	(append (container od) (list v))))

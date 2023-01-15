@@ -21,11 +21,11 @@
     
     ($defsynonym *synonyms* "%argc" ($s-literal "int" 1))
     (let ((c (make-instance 'Collection)))
-      (cpush c ($s-literal "char" ($s-literal "char" #\Null)))
-      (cpush c ($s-literal "char" ($s-literal "char" #\t)))
-      (cpush c ($s-literal "char" ($s-literal "char" #\s)))
-      (cpush c ($s-literal "char" ($s-literal "char" #\e)))
-      (cpush c ($s-literal "char" ($s-literal "char" #\T)))
+      ($cpush c ($s-literal "char" ($s-literal "char" #\Null)))
+      ($cpush c ($s-literal "char" ($s-literal "char" #\t)))
+      ($cpush c ($s-literal "char" ($s-literal "char" #\s)))
+      ($cpush c ($s-literal "char" ($s-literal "char" #\e)))
+      ($cpush c ($s-literal "char" ($s-literal "char" #\T)))
       ($defsynonym *synonyms* "TestName" ($s-collection "char[]" c))
 
       (let ((pointer-to-char-array ($s-literal-index ($lookup *synonyms* "TestName")) 0))
