@@ -33,6 +33,9 @@
   ;; this could be implemented in many ways - I've chosen to use the stupidest, hopefully most clear way
   ;; basically, the strategy is to use a stack (alist, plist) of values for each variable, this used
   ;;  to be called "dynamic binding", before mutation corrupted the idea
+  ;;
+  ;; if "key" is a list of the form (@ NN), stget disregards the name and returns the NNth entry in the stack (0 => top
+  ;;   of stack, 1 => 2nd item on the stack, etc.)
   (let ((value-pairs (stack self)))
     (labels ((first-match (key pairs)
                (cond
@@ -46,7 +49,13 @@
                         ((equal key address)
                          (values data t))
                         (t (first-match key (rest pairs))))))))))
-      (first-match key value-pairs))))
+	    (if (and (listp key)
+		     (= 2 (length key))
+		     (eq '@ (first key))
+		     (numberp (second key)))
+		(let ((pair (nth (second key))))
+		  (cdr pair))
+	      (first-match key value-pairs)))))
 
 (defun warning (message)
   (error message)) ;; maybe, after debugging, we will allow non-matches
