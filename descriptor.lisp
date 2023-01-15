@@ -38,32 +38,25 @@
 (defmethod $get ((self operand-descriptor))
   ($coerce (dtype self) (stget (base self) (key self))))
 
-(defmethod $get ((self literal-index-operand-descriptor))
-  (let ((sc-table (container self)))
-    (let ((stack (stack sc-table)))
-      (nth (offset self) stack))))
-
-(defmethod $get ((self literal-stack-pointer-operand-descriptor))
-  (let ((sc-table (container self)))
-    (let ((stack (stack sc-table)))
-      (first (offset self) stack))))
-
 (defmethod $get ((self literal-operand-descriptor))
   (value self))
 
-(defmethod $save ((self string) v)
-  ;; recursively unwind symbol to extract its underlying data descriptor
-  (let ((d ($lookup *synonyms* self)))
-    ($save d v)))
+(defmethod $get ((self literal-index-operand-descriptor))
+  (let ((lis (container self)))
+    (nth (offset self) lis)))
 
-(defmethod $save ((self operand-descriptor) v)
-  (stput (base self) (key self) v))
+(defmethod $get ((self literal-info-operand-descriptor))
+  (info self))
 
-(defmethod $save ((self literal-index-operand-descriptor) v)
-  (stpush (nth (offset self) (container self)) v))
+(defmethod $get ((self collection-operand-descriptor))
+  (error "internal error $get called for collection")) ;; this should probably return the container, but for now is an assert to catch bootstrap errors
 
-(defmethod $save ((self literal-stack-pointer-operand-descriptor) v)
-  (stpush (first (container self)) v))
+
+(defmethod $save ((self operand-descriptor) v)  (stput (base self) (key self) v))
+(defmethod $save ((self literal-operand-descriptor) v) (error "cannot assign to literal operand"))
+(defmethod $save ((self literal-index-operand-descriptor) v) (error "cannot assign to literal index"))
+(defmethod $save ((self literal-info-operand-descriptor) v) (error "cannot assign to literal info"))
+(defmethod $save ((self collection-operand-descriptor) v)(error "cannot assign to collection operand descriptor"))
 
 
 ;; fdesc = ("name" inputs outputs)

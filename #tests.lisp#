@@ -23,7 +23,7 @@
     (let ((c (make-instance 'Collection)))
       ($cpush c ($get ($s-literal "char" ($s-literal "char" #\Null))))
       ($cpush c ($get ($s-literal "char" ($s-literal "char" #\t))))
-      ($cpush c ($get ($s-literal "char" ($s-literal "char" #\s))))
+      ($cpush c ($get ($s-literal "char"arrowgrams/compiler/back-end ($s-literal "char" #\s))))
       ($cpush c ($get ($s-literal "char" ($s-literal "char" #\e))))
       ($cpush c ($get ($s-literal "char" ($s-literal "char" #\T))))
       ($defsynonym *synonyms* "TestName" ($s-collection "char[]" c))

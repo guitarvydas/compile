@@ -84,8 +84,3 @@
   (format nil "~a: ~a" (name self) (stack self)))
 
 
-(defclass Collection (scoped-table)
-  ())
-
-(defmethod cpush ((self Collection) v)
-  (stpush self v))

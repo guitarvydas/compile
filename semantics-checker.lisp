@@ -10,6 +10,6 @@
   (assert (eq 'Collection (type-of c)))
   (make-instance 'literal-index-operand-descriptor :container c :offset offset))
 
-(defun $s-literal-stack-pointer (c)
-  (assert (eq 'Collection (type-of c)))
-  (make-instance 'literal-stack-pointer-operand-descriptor :container c))
+(defun $s-collection (typename)
+  (make-instance 'collection-operand-descriptor :dtype typename :container nil))
+  
