@@ -7,7 +7,7 @@
   (make-instance 'literal-operand-descriptor :dtype typename :value value))
 
 (defun $s-literal-index (c offset)
-  (assert (eq 'Collection (type-of c)))
+  (assert (eq 'Collection-operand-descriptor (type-of c)))
   (make-instance 'literal-index-operand-descriptor :container c :offset offset))
 
 (defun $s-collection (typename)

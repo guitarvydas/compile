@@ -93,9 +93,9 @@
                        (type-of fname) fname))))))
 
 
-(defmethod $cpush (v (od collection-operand-descriptor))
-  (push v (container od)))
+(defmethod $cpush ((od collection-operand-descriptor) v-od)
+  (push v-od (container od)))
 
-(defmethod $cappend (v (od collection-operand-descriptor))
+(defmethod $cappend ((od collection-operand-descriptor) v-od)
   (setf (container od)
-	(append (container od) (list v))))
+	(append (container od) (list v-od))))
