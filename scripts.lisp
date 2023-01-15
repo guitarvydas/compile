@@ -14,7 +14,6 @@
   ($i-beginFunction "identity") 
   ($pushNewScope *synonyms*)
   ($pushNewScope *parameters*)
-  ($pushNewScope *temps*)
   (catch 'script
 	 ($defsynonym *synonyms* "identity" ($g-func
 				  "identity"
@@ -22,15 +21,14 @@
 				  (list "char"))) ;; return type - char
 	 
 	 ;;char identity (char c) {
+	 ($defsynonym *synonyms* "arg 0" ($s-var "char" *args* "arg 0"))
 	 ($defsynonym *synonyms* "c" ($s-var "char" *parameters* "c"))
-         ($defsynonym *synonyms* "arg c" (make-instance 'literal-index-operand-descriptor :dtype "char" :container *args* :offset 0))
-	 ($i-copy "arg c" >> "c")
+	 ($copy "arg 0" >> "c")
 	 ;;  return c;
-	 ($defsynonym *synonyms* "return value" ($s-var "char" *results* "0"))
-	 ($i-copy "c" >> "return value")
-	 ($i-return-from-function "identity"))
+	 ($defsynonym *synonyms* "result value" ($s-var "char" *results* "result 0"))
+	 ($copy "c" >> "result value")
+	 (throw 'script)
   ;;}
-  ($popScope *temps*)
   ($popScope *parameters*)
   ($popScope *synonyms*)
   ($i-endFunction "identity"))
@@ -46,9 +44,16 @@
                               "main"
                               (list (cons "argc" "int") (cons "argv" "char**")) ;; params - argc, argv
                               (list "void"))) ;; return type - none (void)
-	 
-	 ($defsynonym *synonyms* "argc" ($s-var "int" *parameters* "argc"))
-	 ($defsynonym *synonyms* "argv" ($s-var "char**" *parameters* "argv"))
+
+	 ;; map stack-relative (args 0) to named slot "argc"
+	 ($defsynonym *synonyms* "argc" ($s-var "int" *parameters* "argc")) ;; named
+	 ($defsynonym *synonyms* "arg 0" ($s-var "int" *args* (@ 0))) ;; stack relative
+	 ($copy "arg 0" "argc")
+
+	 ($defsynonym *synonyms* "argv" ($s-var "char**" *parameters* "argv")) ;; named
+	 ($defsynonym *synonyms* "arg 1" ($s-var "int" *args* (@ 0))) ;; stack relative
+	 ($copy "arg 1" "argv")
+
 	 ;;  char x = identity ('x');
 	 ($defsynonym *synonyms* "x" ($s-var "char" *temps* "x"))
 	 ($defsynonym *synonyms* "undefined" ($s-literal "void" "<undefined>"))
