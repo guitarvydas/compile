@@ -28,7 +28,7 @@
       (cpush c ($s-literal "char" ($s-literal "char" #\T)))
       ($defsynonym *synonyms* "TestName" ($s-collection "char[]" c))
 
-      (let ((pointer-to-char-array ($s-literal-index ($get ($lookup *synonyms* "TestName")) 0)))
+      (let ((pointer-to-char-array ($s-literal-index ($lookup *synonyms* "TestName")) 0))
 
       (let ((collection-of-pointer-char-array (make-instance 'Collection)))
         (cpush collection-of-pointer-char-array pointer-to-char)
@@ -40,7 +40,8 @@
           ($push *args* ($get ($lookup *synonyms* "argv for testing")))
           ($push *args* ($get ($lookup *synonyms* "argc")))
           (format *standard-output* "~%$-run...~%")
-          (script-main))
+          (script-main)
+	  (throw 'script))
         ($popScope *args*)
         ($popScope *results*))))
     ($popScope *parameters*)
