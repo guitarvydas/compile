@@ -49,11 +49,12 @@
                         ((equal key address)
                          (values data t))
                         (t (first-match key (rest pairs))))))))))
+
 	    (if (and (listp key)
 		     (= 2 (length key))
 		     (eq '@ (first key))
 		     (numberp (second key)))
-		(let ((pair (nth (second key))))
+		(let ((pair (nth (second key) value-pairs)))
 		  (cdr pair))
 	      (first-match key value-pairs)))))
 

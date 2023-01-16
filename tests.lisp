@@ -42,7 +42,7 @@
 
           ($pushNewScope *results*)
           ($push *args* ($get ($lookup *synonyms* "argv for testing")))
-          ($push *args* ($get ($lookup *synonyms* "argc")))
+          ($push *args* ($get ($lookup *synonyms* "%argc")))
           (format *standard-output* "~%$-run...~%")
           (script-main)
           ($popScope *args*)
