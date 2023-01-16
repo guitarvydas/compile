@@ -14,6 +14,9 @@
 	  (ld "semantics-checker.lisp")
 	  (ld "i.lisp")
 
+	  ;; built in functions
+	  (ld "builtin.lisp")
+
 	  ;; scripts
 	  (ld "scripts.lisp")
 

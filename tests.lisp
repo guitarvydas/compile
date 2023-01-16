@@ -27,7 +27,6 @@
       ($cpush c ($s-literal "char" ($s-literal "char" #\e)))
       ($cpush c ($s-literal "char" ($s-literal "char" #\T)))
       ($defsynonym *synonyms* "TestName" c)
-(format *standard-output* "c: ~a~%" c)
       
       (let ((pointer-to-char-array ($s-literal-index ($lookup *synonyms* "TestName") 0)))
         
@@ -36,10 +35,6 @@
           
           ($defsynonym *synonyms* "argv for testing" ($s-literal-index collection-of-pointer-to-char-array 0))
           
-(format *standard-output* "pointer-to-char-array: ~a~%" pointer-to-char-array)
-(format *standard-output* "collection-of-pointer-to-char-array: ~a~%" collection-of-pointer-to-char-array)
-(format *standard-output* "argv for testing: ~a~%" ($lookup *synonyms* "argv for testing"))
-
           ($pushNewScope *results*)
           ($push *args* ($get ($lookup *synonyms* "argv for testing")))
           ($push *args* ($get ($lookup *synonyms* "%argc")))
