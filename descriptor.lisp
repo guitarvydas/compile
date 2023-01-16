@@ -4,8 +4,7 @@
   ((dtype :accessor dtype :initarg :dtype)))
 
 (defclass operand-descriptor (basic-operand-descriptor)
-  ((indirection :accessor indirection :initarg :@ :initform 1)
-   (base :accessor base :initarg :base)
+  ((base :accessor base :initarg :base)
    (key :accessor key :initarg :key)))
 
 (defclass literal-operand-descriptor (basic-operand-descriptor)
@@ -42,8 +41,9 @@
   (value self))
 
 (defmethod $get ((self literal-index-operand-descriptor))
-  (let ((lis (container self)))
-    (nth (offset self) lis)))
+  (let ((collection-operand (container self)))
+    (let ((lis (container collection-operand)))
+      (nth (offset self) lis))))
 
 (defmethod $get ((self literal-info-operand-descriptor))
   (info self))
@@ -99,3 +99,21 @@
 (defmethod $cappend ((od collection-operand-descriptor) v-od)
   (setf (container od)
 	(append (container od) (list v-od))))
+
+
+
+;; ------ repr -----
+
+(defmethod print-object ((self operand-descriptor) stream)
+  (format stream "~a.~a" (name (base self)) (key self)))
+
+(defmethod print-object ((self literal-operand-descriptor) stream)
+  (format stream "~a" (value self)))
+(defmethod print-object ((self literal-info-operand-descriptor) stream)
+  (format stream "~a(~a)>>(~a)" (function-name self) (formals self) (return-type self)))
+(defmethod print-object ((self literal-index-operand-descriptor) stream)
+  (format stream "[" )
+  (print-object (container self) stream)
+  (format stream "[~a]]" (offset self)))
+(defmethod print-object ((self collection-operand-descriptor) stream)
+  (format stream "~a" (container self)))
