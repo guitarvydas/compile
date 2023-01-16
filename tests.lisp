@@ -21,19 +21,19 @@
     
     ($defsynonym *synonyms* "%argc" ($s-literal "int" 1))
     (let ((c ($s-collection "char[]")))
-      ($cpush ($s-literal "char" ($s-literal "char" #\Null)) c)
-      ($cpush ($s-literal "char" ($s-literal "char" #\t)) c)
-      ($cpush ($s-literal "char" ($s-literal "char" #\s)) c)
-      ($cpush ($s-literal "char" ($s-literal "char" #\e)) c)
-      ($cpush ($s-literal "char" ($s-literal "char" #\T)) c)
+      ($cpush c ($s-literal "char" ($s-literal "char" #\Null)))
+      ($cpush c ($s-literal "char" ($s-literal "char" #\t)))
+      ($cpush c ($s-literal "char" ($s-literal "char" #\s)))
+      ($cpush c ($s-literal "char" ($s-literal "char" #\e)))
+      ($cpush c ($s-literal "char" ($s-literal "char" #\T)))
       ($defsynonym *synonyms* "TestName" c)
       
       (let ((pointer-to-char-array ($s-literal-index ($lookup *synonyms* "TestName") 0)))
         
-        (let ((collection-of-pointer-char-array ($s-collection "char[][]")))
-          ($cpush pointer-to-char-array collection-of-pointer-char-array)
+        (let ((collection-of-pointer-to-char-array ($s-collection "char[][]")))
+          ($cpush collection-of-pointer-to-char-array pointer-to-char-array)
           
-          ($defsynonym *synonyms* "argv for testing" ($s-literal-index collection-of-pointer-char-array 0))
+          ($defsynonym *synonyms* "argv for testing" ($s-literal-index collection-of-pointer-to-char-array 0))
           
           ($pushNewScope *results*)
           ($push *args* ($get ($lookup *synonyms* "argv for testing")))
