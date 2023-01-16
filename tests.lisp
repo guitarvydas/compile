@@ -7,13 +7,13 @@
   ($pushNewScope *synonyms*)
   ($pushNewScope *parameters*)
   (block script
-    ($defsynonym *synonyms* "identity" ($g-func
-                                        "identity"
+    ($defsynonym *synonyms* "script-identity" ($g-func
+                                        "script-identity"
                                         (list (list "c" "char")) ;; param - c
                                         (list "char"))) ;; return type - char
     
-    ($defsynonym *synonyms* "main" ($g-func
-                                    "main"
+    ($defsynonym *synonyms* "script-main" ($g-func
+                                    "script-main"
                                     (list (list "argc" "int") (list "argv" "char**")) ;; params - argc, argv
                                     (list "void"))) ;; return type - none (void)
     

@@ -13,14 +13,14 @@
 (defun script-identity  ()
   ($pushNewScope *synonyms*)
   ($pushNewScope *parameters*)
-  ($defsynonym *synonyms* "identity" ($g-func
-				      "identity"
+  ($defsynonym *synonyms* "script-identity" ($g-func
+				      "script-identity"
 				      (list (cons "c" "char")) ;; param - c
 				      (list "char"))) ;; return type - char
-  ($beginFunction ($lookup *synonyms* "identity"))
+  ($beginFunction ($lookup *synonyms* "script-identity"))
   (block script
 	 ;;char identity (char c) {
-	 ($defsynonym *synonyms* "arg 0" ($s-var "char" *args* "arg 0"))
+	 ($defsynonym *synonyms* "arg 0" ($s-var "char" *args* '(@ 0)))
 	 ($defsynonym *synonyms* "c" ($s-var "char" *parameters* "c"))
 	 ($copy ($get ($lookup *synonyms* "arg 0")) >> ($lookup *synonyms* "c"))
 	 ;;  return c;
@@ -30,18 +30,18 @@
   ;;}
   ($popScope *parameters*)
   ($popScope *synonyms*)
-  ($endFunction "identity"))
+  ($endFunction "script-identity"))
   
 (defun script-main ()
   ;; int main (int argc, char **argv) {
   ($pushNewScope *synonyms*)
   ($pushNewScope *parameters*)
   ($pushNewScope *temps*)
-  ($defsynonym *synonyms* "main" ($g-func
-				  "main"
+  ($defsynonym *synonyms* "script-main" ($g-func
+				  "script-main"
 				  (list (cons "argc" "int") (cons "argv" "char**")) ;; params - argc, argv
 				  (list "void"))) ;; return type - none (void)
-  ($beginFunction ($lookup *synonyms* "main"))
+  ($beginFunction ($lookup *synonyms* "script-main"))
   (block script
     
     ;; map stack-relative (args 0) to named slot "argc"
@@ -109,5 +109,5 @@
   ($popScope *temps*)
   ($popScope *parameters*)
   ($popScope *synonyms*) 
-  ($endFunction ($lookup *synonyms* "main"))
+  ($endFunction ($lookup *synonyms* "script-main"))
   )
